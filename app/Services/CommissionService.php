@@ -59,8 +59,10 @@ class CommissionService
             return collect();
         }
 
-        // 4. Commission Calculation Base: Product Subtotal ONLY (excludes delivery fees/courier costs)
-        $baseAmount = (string) $order->subtotal;
+        // 4. Commission Calculation Base: Net Discounted Product Subtotal ONLY (excludes delivery fees/courier costs)
+        // Net Discounted Product Subtotal = Gross Product Subtotal - Product Discount (Mandate 3.1)
+        $discountAmount = (string) ($order->discount_amount ?? '0.00');
+        $baseAmount = bcsub((string) $order->subtotal, $discountAmount, 2);
         if (bccomp($baseAmount, '0', 2) <= 0) {
             return collect();
         }

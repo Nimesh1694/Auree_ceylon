@@ -44,7 +44,18 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'inventory.view', 'display_name' => 'View Inventory & Stock Levels', 'module' => 'inventory', 'description' => 'View current physical stock and low-stock alerts', 'is_financial_restricted' => false],
             ['name' => 'inventory.adjust', 'display_name' => 'Perform Stock Adjustments', 'module' => 'inventory', 'description' => 'Restock, deduct, or adjust physical inventory', 'is_financial_restricted' => false],
             ['name' => 'inventory.movements.view', 'display_name' => 'Audit Inventory Movements', 'module' => 'inventory', 'description' => 'View immutable stock movement ledger records', 'is_financial_restricted' => false],
+            ['name' => 'inventory.alerts.view', 'display_name' => 'View Low-Stock Alerts', 'module' => 'inventory', 'description' => 'View automated low-stock alerts and thresholds', 'is_financial_restricted' => false],
+            ['name' => 'inventory.alerts.acknowledge', 'display_name' => 'Acknowledge Low-Stock Alerts', 'module' => 'inventory', 'description' => 'Acknowledge open low-stock alerts and record follow-up notes', 'is_financial_restricted' => false],
             ['name' => 'couriers.manage', 'display_name' => 'Manage Courier Partners', 'module' => 'inventory', 'description' => 'Create and configure delivery courier profiles', 'is_financial_restricted' => false],
+
+            // Supply Chain & Procurement (supply_chain)
+            ['name' => 'suppliers.view', 'display_name' => 'View Suppliers Directory', 'module' => 'supply_chain', 'description' => 'View supplier profiles, terms, and product links', 'is_financial_restricted' => false],
+            ['name' => 'suppliers.manage', 'display_name' => 'Manage Suppliers & Product Links', 'module' => 'supply_chain', 'description' => 'Create, update, activate/deactivate suppliers and manage product-supplier links', 'is_financial_restricted' => false],
+            ['name' => 'purchase_orders.view', 'display_name' => 'View Purchase Orders', 'module' => 'supply_chain', 'description' => 'View purchase orders, line items, and receiving history', 'is_financial_restricted' => false],
+            ['name' => 'purchase_orders.create', 'display_name' => 'Create & Edit Draft Purchase Orders', 'module' => 'supply_chain', 'description' => 'Create and modify draft purchase orders', 'is_financial_restricted' => false],
+            ['name' => 'purchase_orders.approve', 'display_name' => 'Approve Purchase Orders', 'module' => 'supply_chain', 'description' => 'Exclusively approve and issue purchase orders (Owner Only)', 'is_financial_restricted' => true],
+            ['name' => 'purchase_orders.receive', 'display_name' => 'Receive Purchase Order Stock', 'module' => 'supply_chain', 'description' => 'Record partial or full stock receipts for ordered purchase orders', 'is_financial_restricted' => false],
+            ['name' => 'purchase_orders.cancel', 'display_name' => 'Cancel Purchase Orders', 'module' => 'supply_chain', 'description' => 'Cancel draft or unreceived purchase orders', 'is_financial_restricted' => false],
 
             // Order Administration (orders)
             ['name' => 'orders.view', 'display_name' => 'View Customer Orders', 'module' => 'orders', 'description' => 'View orders, customer addresses, and order items', 'is_financial_restricted' => false],
@@ -65,6 +76,19 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'agents.hierarchy.request', 'display_name' => 'Request Agent Hierarchy Move', 'module' => 'agents', 'description' => 'Submit request to move agent under new parent', 'is_financial_restricted' => false],
             ['name' => 'agents.hierarchy.review', 'display_name' => 'Approve Agent Hierarchy Move', 'module' => 'agents', 'description' => 'Exclusively approve agent sponsor changes (Owner Only)', 'is_financial_restricted' => true],
             ['name' => 'agents.hierarchy.integrity', 'display_name' => 'Audit Hierarchy Network Integrity', 'module' => 'agents', 'description' => 'Inspect and audit agent hierarchy closure integrity and graph consistency', 'is_financial_restricted' => false],
+            ['name' => 'agents.announcements.view', 'display_name' => 'View Agent Announcements Console', 'module' => 'agents', 'description' => 'View announcement lists, drafts, scheduled broadcasts, and read analytics', 'is_financial_restricted' => false],
+            ['name' => 'agents.announcements.manage', 'display_name' => 'Manage Announcements & Drafts', 'module' => 'agents', 'description' => 'Create, edit, pin, unpin, cancel schedule, and archive agent announcements', 'is_financial_restricted' => false],
+            ['name' => 'agents.announcements.publish', 'display_name' => 'Publish & Schedule Announcements', 'module' => 'agents', 'description' => 'Publish broadcasts immediately or schedule for automated future publication', 'is_financial_restricted' => false],
+            ['name' => 'agents.analytics.view', 'display_name' => 'View Agent Performance Analytics', 'module' => 'agents', 'description' => 'View operational agent performance metrics and dashboards', 'is_financial_restricted' => false],
+            ['name' => 'agents.analytics.export', 'display_name' => 'Export Agent Performance Analytics', 'module' => 'agents', 'description' => 'Export agent performance data to streaming CSV', 'is_financial_restricted' => false],
+            ['name' => 'agents.targets.manage', 'display_name' => 'Manage Agent Sales Targets', 'module' => 'agents', 'description' => 'Create, update, and manage monthly agent sales targets', 'is_financial_restricted' => false],
+            ['name' => 'agents.achievements.view', 'display_name' => 'View Agent Achievements', 'module' => 'agents', 'description' => 'View agent achievements, awards, and leaderboard data', 'is_financial_restricted' => false],
+            ['name' => 'agents.achievements.manage', 'display_name' => 'Manage Achievement Technical Parameters', 'module' => 'agents', 'description' => 'Configure technical achievement parameters, toggle active status, and inspect evaluation runs', 'is_financial_restricted' => false],
+            ['name' => 'agents.achievements.publish', 'display_name' => 'Publish & Approve Achievement Definitions', 'module' => 'agents', 'description' => 'Approve, activate, and publish new achievement definitions and rule versions (Owner Only)', 'is_financial_restricted' => true],
+            ['name' => 'agents.achievements.request', 'display_name' => 'Request Discretionary Achievement', 'module' => 'agents', 'description' => 'Submit discretionary achievement award requests for review', 'is_financial_restricted' => false],
+            ['name' => 'agents.achievements.award', 'display_name' => 'Approve & Issue Discretionary Awards', 'module' => 'agents', 'description' => 'Approve and issue discretionary achievement awards (Owner Only)', 'is_financial_restricted' => true],
+            ['name' => 'agents.achievements.revoke', 'display_name' => 'Revoke Achievement Awards', 'module' => 'agents', 'description' => 'Revoke previously issued achievement awards (Owner Only)', 'is_financial_restricted' => true],
+            ['name' => 'agents.achievements.export', 'display_name' => 'Export Achievement Data', 'module' => 'agents', 'description' => 'Export achievement awards and qualification data', 'is_financial_restricted' => false],
 
             // Commission Governance (commissions)
             ['name' => 'commissions.ledger.view', 'display_name' => 'View Commission Ledger', 'module' => 'commissions', 'description' => 'Inspect company-wide commission transactions', 'is_financial_restricted' => false],
@@ -86,6 +110,19 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'system.health.view', 'display_name' => 'Monitor System Health & Runtime', 'module' => 'system', 'description' => 'Inspect database, cache, queues, and server metrics', 'is_financial_restricted' => false],
             ['name' => 'system.logs.view', 'display_name' => 'View System Audit Logs', 'module' => 'system', 'description' => 'Inspect security events, logins, and audit trail', 'is_financial_restricted' => false],
             ['name' => 'system.maintenance.manage', 'display_name' => 'Manage Maintenance Mode', 'module' => 'system', 'description' => 'Toggle application maintenance mode with bypass keys', 'is_financial_restricted' => false],
+
+            // Coupon & Discount System (marketing)
+            ['name' => 'coupons.view', 'display_name' => 'View Marketing Coupons', 'module' => 'marketing', 'description' => 'View coupons directory and usage records', 'is_financial_restricted' => false],
+            ['name' => 'coupons.create', 'display_name' => 'Create Standard Coupons', 'module' => 'marketing', 'description' => 'Create marketing coupons with standard caps', 'is_financial_restricted' => true],
+            ['name' => 'coupons.update', 'display_name' => 'Update Marketing Coupons', 'module' => 'marketing', 'description' => 'Edit marketing coupon parameters and rules', 'is_financial_restricted' => true],
+            ['name' => 'coupons.toggle_active', 'display_name' => 'Toggle Coupon Active Status', 'module' => 'marketing', 'description' => 'Activate or deactivate marketing coupons', 'is_financial_restricted' => true],
+            ['name' => 'coupons.delete', 'display_name' => 'Delete Marketing Coupons', 'module' => 'marketing', 'description' => 'Permanently delete unused coupons (Owner Only)', 'is_financial_restricted' => true],
+            ['name' => 'coupons.unlimited_cap.authorize', 'display_name' => 'Authorize Unlimited/High Cap Coupons', 'module' => 'marketing', 'description' => 'Authorize coupons with unlimited cap or cap exceeding LKR 5,000 (Owner Only)', 'is_financial_restricted' => true],
+
+            // Product Reviews & Ratings (catalog)
+            ['name' => 'reviews.view', 'display_name' => 'View Product Reviews', 'module' => 'catalog', 'description' => 'View product reviews and moderation queue', 'is_financial_restricted' => false],
+            ['name' => 'reviews.moderate', 'display_name' => 'Moderate Product Reviews', 'module' => 'catalog', 'description' => 'Approve or reject customer product reviews', 'is_financial_restricted' => true],
+            ['name' => 'reviews.delete', 'display_name' => 'Delete Product Reviews', 'module' => 'catalog', 'description' => 'Permanently delete product reviews (Owner Only)', 'is_financial_restricted' => true],
         ];
 
         foreach ($permissions as $p) {
@@ -170,8 +207,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $ownerRole->permissions()->sync($allPermissionIds);
 
         // Super Admin gets all technical, user, role, catalog, inventory, order, and agent permissions
-        // EXCEPT the 4 restricted financial/governance review permissions
-        $superAdminPermissionIds = Permission::where('is_financial_restricted', false)->pluck('id')->all();
+        // EXCEPT the restricted financial/governance review permissions and operational nominations
+        $superAdminPermissionIds = Permission::where('is_financial_restricted', false)
+            ->whereNotIn('name', [
+                'agents.achievements.request',
+            ])
+            ->pluck('id')
+            ->all();
         $superAdminRole->permissions()->sync($superAdminPermissionIds);
 
         // Marketing Manager permissions
@@ -182,6 +224,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'categories.manage',
             'orders.view',
             'agents.view',
+            'coupons.view',
+            'coupons.create',
+            'coupons.update',
+            'coupons.toggle_active',
+            'reviews.view',
+            'reviews.moderate',
         ])->pluck('id')->all();
         $marketingRole->permissions()->sync($marketingPermissionIds);
 
@@ -192,8 +240,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'orders.cod.reconcile',
             'inventory.movements.view',
             'products.cost_price.view',
+            'purchase_orders.view',
             'agents.view',
             'agents.kyc.verify',
+            'agents.analytics.view',
+            'agents.analytics.export',
             'commissions.ledger.view',
             'commissions.process',
             'financial.view',
@@ -214,7 +265,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.view',
             'inventory.adjust',
             'inventory.movements.view',
+            'inventory.alerts.view',
+            'inventory.alerts.acknowledge',
+            'coupons.view',
             'couriers.manage',
+            'suppliers.view',
+            'suppliers.manage',
+            'purchase_orders.view',
+            'purchase_orders.create',
+            'purchase_orders.receive',
+            'purchase_orders.cancel',
         ])->pluck('id')->all();
         $prodInvRole->permissions()->sync($prodInvPermissionIds);
 
@@ -228,6 +288,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'orders.returns.manage',
             'couriers.manage',
             'inventory.view',
+            'inventory.alerts.view',
+            'inventory.alerts.acknowledge',
+            'coupons.view',
+            'reviews.view',
         ])->pluck('id')->all();
         $opsRole->permissions()->sync($opsPermissionIds);
 
@@ -235,12 +299,21 @@ class RolesAndPermissionsSeeder extends Seeder
         $agentMgrPermissionIds = Permission::whereIn('name', [
             'agents.view',
             'agents.kyc.verify',
+            'agents.analytics.view',
+            'agents.analytics.export',
             'agents.status.update',
             'agents.hierarchy.request',
             'agents.invitations.create_hla',
             'agents.invitations.view',
             'agents.applications.review',
             'agents.support.manage',
+            'agents.announcements.view',
+            'agents.announcements.manage',
+            'agents.announcements.publish',
+            'agents.targets.manage',
+            'agents.achievements.view',
+            'agents.achievements.request',
+            'agents.achievements.export',
         ])->pluck('id')->all();
         $agentMgrRole->permissions()->sync($agentMgrPermissionIds);
 

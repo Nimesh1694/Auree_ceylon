@@ -2,11 +2,27 @@
 
 namespace App\Models;
 
+use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
+    /**
+     * Boot the model.
+     * Enforce Eloquent application-level write-only immutability.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function () {
+            throw new DomainException("AuditLog records are strictly immutable and cannot be updated.");
+        });
+
+        static::deleting(function () {
+            throw new DomainException("AuditLog records are strictly immutable and cannot be deleted.");
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'action',

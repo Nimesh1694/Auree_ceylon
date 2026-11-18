@@ -9,6 +9,33 @@ use Illuminate\Support\Facades\Session;
 class CartService
 {
     private const SESSION_KEY = 'cart';
+    private const COUPON_SESSION_KEY = 'applied_coupon_code';
+
+    /**
+     * Get applied coupon code from session.
+     */
+    public function getAppliedCouponCode(): ?string
+    {
+        return Session::get(self::COUPON_SESSION_KEY);
+    }
+
+    /**
+     * Apply coupon code to cart session.
+     */
+    public function applyCoupon(string $code): array
+    {
+        Session::put(self::COUPON_SESSION_KEY, strtoupper(trim($code)));
+        return $this->getDetails();
+    }
+
+    /**
+     * Remove applied coupon code from cart session.
+     */
+    public function removeCoupon(): array
+    {
+        Session::forget(self::COUPON_SESSION_KEY);
+        return $this->getDetails();
+    }
 
     /**
      * Get raw cart contents from session [product_id => quantity].
@@ -84,6 +111,7 @@ class CartService
     public function clear(): void
     {
         Session::forget(self::SESSION_KEY);
+        Session::forget(self::COUPON_SESSION_KEY);
     }
 
     /**
@@ -157,14 +185,65 @@ class CartService
             ? (float) Setting::get('default_delivery_charge', 350.00)
             : 0.00;
 
-        $total = round($subtotal + $deliveryCharge, 2);
+        $couponCode = $this->getAppliedCouponCode();
+        $couponData = null;
+        $discountAmount = 0.00;
+        $shippingDiscountAmount = 0.00;
+        $couponError = null;
+
+        if ($couponCode && !empty($items)) {
+            try {
+                $couponService = app(\App\Services\CouponService::class);
+                $cartItemsForCalc = [];
+                foreach ($items as $idx => $it) {
+                    $cartItemsForCalc[] = [
+                        'id' => $idx + 1,
+                        'product_id' => $it['product_id'],
+                        'category_id' => $products->get($it['product_id'])?->category_id,
+                        'quantity' => $it['quantity'],
+                        'unit_price' => $it['unit_price'],
+                    ];
+                }
+
+                $calc = $couponService->validateAndCalculate(
+                    couponOrCode: $couponCode,
+                    cartItems: $cartItemsForCalc,
+                    customer: auth()->user(),
+                    deliveryCharge: $deliveryCharge,
+                    referralCode: Session::get('referral_code')
+                );
+
+                $discountAmount = (float) $calc['discount_amount'];
+                $shippingDiscountAmount = (float) $calc['shipping_discount_amount'];
+                $couponData = [
+                    'id' => $calc['coupon']->id,
+                    'code' => $calc['coupon']->code,
+                    'name' => $calc['coupon']->name,
+                    'type' => $calc['coupon']->type,
+                    'value' => (float) $calc['coupon']->value,
+                    'discount_amount' => $discountAmount,
+                    'shipping_discount_amount' => $shippingDiscountAmount,
+                ];
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // If coupon became invalid (e.g. subtotal fell below min), remove it from session
+                $couponError = $e->validator->errors()->first();
+                Session::forget(self::COUPON_SESSION_KEY);
+            }
+        }
+
+        $finalDeliveryCharge = max(0.00, round($deliveryCharge - $shippingDiscountAmount, 2));
+        $total = max(0.00, round($subtotal - $discountAmount + $finalDeliveryCharge, 2));
 
         return [
             'items' => $items,
             'item_count' => array_sum(array_column($items, 'quantity')),
             'subtotal' => $subtotal,
             'delivery_charge' => $deliveryCharge,
+            'discount_amount' => $discountAmount,
+            'shipping_discount_amount' => $shippingDiscountAmount,
             'total' => $total,
+            'coupon' => $couponData,
+            'coupon_error' => $couponError,
             'has_out_of_stock' => $hasOutOfStock,
         ];
     }

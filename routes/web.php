@@ -1,10 +1,15 @@
 <?php
 
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
+use App\Http\Controllers\Admin\AgentAchievementAwardController as AdminAgentAchievementAwardController;
+use App\Http\Controllers\Admin\AgentAchievementRequestController as AdminAgentAchievementRequestController;
+use App\Http\Controllers\Admin\AgentAnalyticsController as AdminAgentAnalyticsController;
+use App\Http\Controllers\Admin\AgentAnnouncementController as AdminAgentAnnouncementController;
 use App\Http\Controllers\Admin\AgentInvitationController as AdminAgentInvitationController;
 use App\Http\Controllers\Admin\ApprovalCenterController as AdminApprovalCenterController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CommissionController as AdminCommissionController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\CustomerInquiryController as AdminCustomerInquiryController;
@@ -16,10 +21,17 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
 use App\Http\Controllers\Admin\PermissionRequestController as AdminPermissionRequestController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductReviewController as AdminProductReviewController;
+use App\Http\Controllers\Admin\PurchaseOrderController as AdminPurchaseOrderController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
+use App\Http\Controllers\Admin\StockAlertController as AdminStockAlertController;
+use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
 use App\Http\Controllers\Admin\SystemHealthController as AdminSystemHealthController;
+use App\Http\Controllers\Agent\AgentAchievementPortalController;
 use App\Http\Controllers\Agent\AgentInvitationController as AgentInvitationController;
+use App\Http\Controllers\Agent\AnalyticsController as AgentAnalyticsPortalController;
+use App\Http\Controllers\Agent\AnnouncementController as AgentAnnouncementPortalController;
 use App\Http\Controllers\Agent\CommissionController as AgentCommissionController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Agent\OrderController as AgentOrderController;
@@ -30,14 +42,17 @@ use App\Http\Controllers\Agent\WalletController as AgentWalletController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\RecentlyViewedProductController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\BackInStockSubscriptionController;
 use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\CategoryController;
 use App\Http\Controllers\Public\CheckoutController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\ProductController;
+use App\Http\Controllers\Public\ProductReviewController as PublicProductReviewController;
 use App\Http\Controllers\Public\TrackingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -47,8 +62,26 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/locale', [LocaleController::class, 'switch'])->name('locale.switch');
 
 // Products
+Route::get('/api/products/batch', [ProductController::class, 'batch'])->name('products.batch');
+Route::get('/products/batch', [ProductController::class, 'batch']);
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product}/reviews', [PublicProductReviewController::class, 'index'])->name('products.reviews.index');
+Route::post('/products/{product}/reviews', [PublicProductReviewController::class, 'store'])->middleware('auth')->name('products.reviews.store');
+
+// Back-in-Stock Alerts (FV-03-05)
+Route::post('/back-in-stock/subscribe', [BackInStockSubscriptionController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('back-in-stock.subscribe');
+Route::get('/back-in-stock/verify', [BackInStockSubscriptionController::class, 'showVerify'])
+    ->name('back-in-stock.verify');
+Route::post('/back-in-stock/verify', [BackInStockSubscriptionController::class, 'verify'])
+    ->middleware('throttle:20,1')
+    ->name('back-in-stock.verify.confirm');
+Route::get('/back-in-stock/unsubscribe/{subscription}', [BackInStockSubscriptionController::class, 'showUnsubscribe'])
+    ->name('back-in-stock.unsubscribe');
+Route::post('/back-in-stock/unsubscribe/{subscription}', [BackInStockSubscriptionController::class, 'unsubscribe'])
+    ->name('back-in-stock.unsubscribe.confirm');
 
 // Categories
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -65,6 +98,8 @@ Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear
 Route::middleware('customer.active')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
+    Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->middleware('throttle:15,1')->name('checkout.apply_coupon');
+    Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove_coupon');
 });
 Route::get('/orders/{orderNumber}/confirmation', [CheckoutController::class, 'confirmation'])->name('order.confirmation');
 
@@ -98,6 +133,11 @@ Route::middleware(['auth', 'two_factor', 'customer.active'])->prefix('customer')
     Route::put('/addresses/{address}', [CustomerAddressController::class, 'update'])->name('addresses.update');
     Route::delete('/addresses/{address}', [CustomerAddressController::class, 'destroy'])->name('addresses.destroy');
     Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
+
+    // Customer Recently Viewed Products (FV-03-04)
+    Route::get('/recently-viewed', [RecentlyViewedProductController::class, 'index'])->name('recently-viewed.index');
+    Route::post('/recently-viewed', [RecentlyViewedProductController::class, 'store'])->name('recently-viewed.store');
+    Route::post('/recently-viewed/merge', [RecentlyViewedProductController::class, 'merge'])->name('recently-viewed.merge');
 });
 
 Route::middleware(['auth', 'two_factor', 'customer.active'])->group(function () {
@@ -141,6 +181,22 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::post('/wallet/payout-requests/{payoutRequest}/cancel', [AgentWalletController::class, 'cancelPayout'])->name('wallet.payout-requests.cancel');
     Route::get('/wallet/payout-requests/{payoutRequest}/receipt', [AgentWalletController::class, 'downloadReceipt'])->name('wallet.payout-requests.receipt');
     Route::get('/wallet/statements', [AgentWalletController::class, 'statements'])->name('wallet.statements');
+
+    // Agent Announcements Feed & Read Tracking (FV-04-04 Phase 1)
+    Route::get('/announcements', [AgentAnnouncementPortalController::class, 'index'])->name('announcements.index');
+    Route::post('/announcements/{announcement}/read', [AgentAnnouncementPortalController::class, 'markRead'])->name('announcements.read');
+
+    // Agent Performance Analytics (FV-04-01 Phase 1)
+    Route::get('/analytics', [AgentAnalyticsPortalController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/export', [AgentAnalyticsPortalController::class, 'export'])->name('analytics.export');
+
+    // Agent Downline Target Management (FV-04-02 Stage 2)
+    Route::post('/team/targets', [AgentAnalyticsPortalController::class, 'storeDownlineTarget'])->name('team.targets.store');
+    Route::put('/team/targets/{target}', [AgentAnalyticsPortalController::class, 'updateDownlineTarget'])->name('team.targets.update');
+
+    // Agent Achievements & Honors (FV-04-03 Stage 5)
+    Route::get('/achievements', [AgentAchievementPortalController::class, 'index'])->name('achievements.index');
+    Route::get('/achievements/downline/{member}', [AgentAchievementPortalController::class, 'showDownlineMember'])->name('achievements.downline.show');
 });
 
 // ==========================================
@@ -223,12 +279,55 @@ Route::middleware(['auth', 'role:management', 'two_factor'])->prefix('admin')->n
         Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'deleteImage'])->name('products.images.delete');
     });
 
+    // Marketing & Coupon Management
+    Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');
+    Route::get('/coupons/create', [AdminCouponController::class, 'create'])->name('coupons.create');
+    Route::post('/coupons', [AdminCouponController::class, 'store'])->name('coupons.store');
+    Route::get('/coupons/{coupon}', [AdminCouponController::class, 'show'])->name('coupons.show');
+    Route::get('/coupons/{coupon}/edit', [AdminCouponController::class, 'edit'])->name('coupons.edit');
+    Route::put('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
+    Route::patch('/coupons/{coupon}/toggle', [AdminCouponController::class, 'toggle'])->name('coupons.toggle');
+    Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
+
+    // Product Reviews Moderation
+    Route::get('/reviews', [AdminProductReviewController::class, 'index'])->name('reviews.index');
+    Route::get('/reviews/{review}', [AdminProductReviewController::class, 'show'])->name('reviews.show');
+    Route::patch('/reviews/{review}/approve', [AdminProductReviewController::class, 'approve'])->name('reviews.approve');
+    Route::patch('/reviews/{review}/reject', [AdminProductReviewController::class, 'reject'])->name('reviews.reject');
+    Route::delete('/reviews/{review}', [AdminProductReviewController::class, 'destroy'])->name('reviews.destroy');
+
     // Inventory Management
     Route::get('/inventory', [AdminInventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/movements', [AdminInventoryController::class, 'movements'])->name('inventory.movements');
     Route::post('/inventory/adjust', [AdminInventoryController::class, 'adjust'])
         ->middleware('role:owner,it_manager,super_admin,product_inventory_manager')
         ->name('inventory.adjust');
+    Route::get('/inventory/alerts', [AdminStockAlertController::class, 'index'])->name('inventory.alerts.index');
+    Route::post('/inventory/alerts/{stockAlert}/acknowledge', [AdminStockAlertController::class, 'acknowledge'])->name('inventory.alerts.acknowledge');
+
+    // Supplier Management
+    Route::get('/suppliers', [AdminSupplierController::class, 'index'])->name('suppliers.index');
+    Route::get('/suppliers/create', [AdminSupplierController::class, 'create'])->name('suppliers.create');
+    Route::post('/suppliers', [AdminSupplierController::class, 'store'])->name('suppliers.store');
+    Route::get('/suppliers/{supplier}', [AdminSupplierController::class, 'show'])->name('suppliers.show');
+    Route::get('/suppliers/{supplier}/edit', [AdminSupplierController::class, 'edit'])->name('suppliers.edit');
+    Route::put('/suppliers/{supplier}', [AdminSupplierController::class, 'update'])->name('suppliers.update');
+    Route::patch('/suppliers/{supplier}/toggle-status', [AdminSupplierController::class, 'toggleStatus'])->name('suppliers.toggle-status');
+    Route::post('/suppliers/{supplier}/products', [AdminSupplierController::class, 'linkProduct'])->name('suppliers.products.link');
+    Route::put('/suppliers/{supplier}/products/{product}', [AdminSupplierController::class, 'updateProduct'])->name('suppliers.products.update');
+    Route::patch('/suppliers/{supplier}/products/{product}/preferred', [AdminSupplierController::class, 'setPreferredProduct'])->name('suppliers.products.preferred');
+    Route::delete('/suppliers/{supplier}/products/{product}', [AdminSupplierController::class, 'unlinkProduct'])->name('suppliers.products.unlink');
+
+    // Purchase Order Management
+    Route::get('/purchase-orders', [AdminPurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+    Route::get('/purchase-orders/create', [AdminPurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+    Route::post('/purchase-orders', [AdminPurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+    Route::get('/purchase-orders/{purchaseOrder}', [AdminPurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+    Route::get('/purchase-orders/{purchaseOrder}/edit', [AdminPurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+    Route::put('/purchase-orders/{purchaseOrder}', [AdminPurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+    Route::post('/purchase-orders/{purchaseOrder}/approve', [AdminPurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+    Route::post('/purchase-orders/{purchaseOrder}/receive', [AdminPurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+    Route::post('/purchase-orders/{purchaseOrder}/cancel', [AdminPurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
 
     // Order Administration
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
@@ -273,6 +372,21 @@ Route::middleware(['auth', 'role:management', 'two_factor'])->prefix('admin')->n
         Route::patch('/inquiries/{inquiry}/priority', [AdminCustomerInquiryController::class, 'updatePriority'])->name('inquiries.priority.update');
         Route::patch('/inquiries/{inquiry}/assign', [AdminCustomerInquiryController::class, 'assignStaff'])->name('inquiries.assign');
         Route::post('/inquiries/{inquiry}/notes', [AdminCustomerInquiryController::class, 'storeNote'])->name('inquiries.notes.store');
+    });
+
+    // Agent Announcements Broadcast System (FV-04-04 Phase 1)
+    Route::prefix('agents/announcements')->name('agents.announcements.')->group(function () {
+        Route::get('/', [AdminAgentAnnouncementController::class, 'index'])->middleware('permission:agents.announcements.view')->name('index');
+        Route::get('/create', [AdminAgentAnnouncementController::class, 'create'])->middleware('permission:agents.announcements.manage')->name('create');
+        Route::post('/', [AdminAgentAnnouncementController::class, 'store'])->middleware('permission:agents.announcements.manage')->name('store');
+        Route::get('/{announcement}/edit', [AdminAgentAnnouncementController::class, 'edit'])->middleware('permission:agents.announcements.manage')->name('edit');
+        Route::put('/{announcement}', [AdminAgentAnnouncementController::class, 'update'])->middleware('permission:agents.announcements.manage')->name('update');
+        Route::post('/{announcement}/publish', [AdminAgentAnnouncementController::class, 'publish'])->middleware('permission:agents.announcements.publish')->name('publish');
+        Route::post('/{announcement}/schedule', [AdminAgentAnnouncementController::class, 'schedule'])->middleware('permission:agents.announcements.publish')->name('schedule');
+        Route::post('/{announcement}/cancel-schedule', [AdminAgentAnnouncementController::class, 'cancelSchedule'])->middleware('permission:agents.announcements.manage')->name('cancel-schedule');
+        Route::post('/{announcement}/archive', [AdminAgentAnnouncementController::class, 'archive'])->middleware('permission:agents.announcements.manage')->name('archive');
+        Route::delete('/{announcement}', [AdminAgentAnnouncementController::class, 'destroy'])->middleware('permission:agents.announcements.manage')->name('destroy');
+        Route::get('/{announcement}/reads', [AdminAgentAnnouncementController::class, 'reads'])->middleware('permission:agents.announcements.view')->name('reads');
     });
 
     // Agent Network, Invitations & Dedicated KYC Queue
@@ -321,6 +435,29 @@ Route::middleware(['auth', 'role:management', 'two_factor'])->prefix('admin')->n
     Route::get('/agents/reports/export', [AdminAgentController::class, 'exportReport'])
         ->middleware('role:owner,it_manager,super_admin,agent_manager')
         ->name('agents.reports.export');
+
+    // Agent Performance Analytics & Sales Targets (FV-04-01 Phase 1)
+    Route::prefix('agents/analytics')->name('agents.analytics.')->group(function () {
+        Route::get('/', [AdminAgentAnalyticsController::class, 'index'])->name('index');
+        Route::get('/export', [AdminAgentAnalyticsController::class, 'export'])->name('export');
+        Route::post('/targets', [AdminAgentAnalyticsController::class, 'storeTarget'])->name('targets.store');
+        Route::put('/targets/{target}', [AdminAgentAnalyticsController::class, 'updateTarget'])->name('targets.update');
+        Route::get('/targets/{target}/history', [AdminAgentAnalyticsController::class, 'targetHistory'])->name('targets.history');
+        Route::get('/{agent}', [AdminAgentAnalyticsController::class, 'show'])->name('show');
+    });
+
+    // Agent Achievements & Honors Management (FV-04-03 Stage 4)
+    Route::prefix('agents/achievements')->name('agents.achievements.')->group(function () {
+        Route::get('/', [AdminAgentAchievementRequestController::class, 'index'])->name('index');
+        Route::post('/requests', [AdminAgentAchievementRequestController::class, 'store'])->name('requests.store');
+        Route::post('/requests/{request}/approve', [AdminAgentAchievementRequestController::class, 'approve'])->name('requests.approve');
+        Route::post('/requests/{request}/reject', [AdminAgentAchievementRequestController::class, 'reject'])->name('requests.reject');
+
+        Route::get('/awards', [AdminAgentAchievementAwardController::class, 'index'])->name('awards.index');
+        Route::post('/awards/direct-grant', [AdminAgentAchievementAwardController::class, 'directGrant'])->name('awards.direct_grant');
+        Route::post('/awards/{award}/revoke', [AdminAgentAchievementAwardController::class, 'revoke'])->name('awards.revoke');
+        Route::post('/awards/{award}/reinstate', [AdminAgentAchievementAwardController::class, 'reinstate'])->name('awards.reinstate');
+    });
 
     Route::get('/agents/{agent}', [AdminAgentController::class, 'show'])->name('agents.show');
     Route::post('/agents/{agent}/approve', [AdminAgentController::class, 'approve'])

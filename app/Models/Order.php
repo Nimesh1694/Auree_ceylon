@@ -23,8 +23,12 @@ class Order extends Model
         'district',
         'city',
         'postal_code',
+        'coupon_id',
+        'coupon_code',
         'subtotal',
+        'discount_amount',
         'delivery_charge',
+        'shipping_discount_amount',
         'total_amount',
         'payment_method',
         'status',
@@ -39,10 +43,27 @@ class Order extends Model
     {
         return [
             'subtotal' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'delivery_charge' => 'decimal:2',
+            'shipping_discount_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'placed_at' => 'datetime',
         ];
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class, 'coupon_id');
+    }
+
+    public function couponUsage(): HasOne
+    {
+        return $this->hasOne(CouponUsage::class, 'order_id');
+    }
+
+    public function netDiscountedProductSubtotal(): string
+    {
+        return bcsub((string) $this->subtotal, (string) ($this->discount_amount ?? '0.00'), 2);
     }
 
     /**

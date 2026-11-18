@@ -25,7 +25,8 @@ class OrderService
         array $rawCart,
         ?User $authenticatedUser = null,
         ?string $referralCode = null,
-        ?int $agentId = null
+        ?int $agentId = null,
+        ?string $couponCode = null
     ): Order {
         if (empty($rawCart)) {
             throw ValidationException::withMessages([
@@ -33,7 +34,7 @@ class OrderService
             ]);
         }
 
-        return DB::transaction(function () use ($customerData, $rawCart, $authenticatedUser, $referralCode, $agentId) {
+        return DB::transaction(function () use ($customerData, $rawCart, $authenticatedUser, $referralCode, $agentId, $couponCode) {
             $productIds = array_keys($rawCart);
 
             // Row-locking on products to prevent race conditions & double-selling
@@ -75,9 +76,42 @@ class OrderService
 
             $subtotal = round($subtotal, 2);
             $deliveryCharge = (float) Setting::get('default_delivery_charge', 350.00);
-            $totalAmount = round($subtotal + $deliveryCharge, 2);
-
             $normalizedPhone = self::normalizePhoneNumber($customerData['customer_phone']);
+
+            // Validate and calculate coupon discount if provided
+            $couponResult = null;
+            $couponDiscountAmount = 0.00;
+            $shippingDiscountAmount = 0.00;
+
+            if (!empty($couponCode)) {
+                $cartItemsForCoupon = [];
+                foreach ($orderItemsData as $idx => $itemData) {
+                    $cartItemsForCoupon[] = [
+                        'id' => $idx + 1,
+                        'product_id' => $itemData['product']->id,
+                        'category_id' => $itemData['product']->category_id,
+                        'quantity' => $itemData['quantity'],
+                        'unit_price' => $itemData['unit_price'],
+                    ];
+                }
+
+                $couponService = app(CouponService::class);
+                $couponResult = $couponService->validateAndCalculate(
+                    couponOrCode: $couponCode,
+                    cartItems: $cartItemsForCoupon,
+                    customer: $authenticatedUser,
+                    customerEmail: $customerData['customer_email'] ?? null,
+                    customerPhone: $normalizedPhone,
+                    deliveryCharge: $deliveryCharge,
+                    referralCode: $referralCode
+                );
+
+                $couponDiscountAmount = (float) $couponResult['discount_amount'];
+                $shippingDiscountAmount = (float) $couponResult['shipping_discount_amount'];
+            }
+
+            $finalDeliveryCharge = max(0.00, round($deliveryCharge - $shippingDiscountAmount, 2));
+            $totalAmount = max(0.00, round($subtotal - $couponDiscountAmount + $finalDeliveryCharge, 2));
 
             // Create Order
             $order = Order::create([
@@ -90,8 +124,12 @@ class OrderService
                 'district' => $customerData['district'],
                 'city' => $customerData['city'],
                 'postal_code' => $customerData['postal_code'] ?? null,
+                'coupon_id' => $couponResult ? $couponResult['coupon']->id : null,
+                'coupon_code' => $couponResult ? $couponResult['coupon']->code : null,
                 'subtotal' => $subtotal,
+                'discount_amount' => $couponDiscountAmount,
                 'delivery_charge' => $deliveryCharge,
+                'shipping_discount_amount' => $shippingDiscountAmount,
                 'total_amount' => $totalAmount,
                 'payment_method' => 'cod',
                 'status' => 'placed',
@@ -103,12 +141,19 @@ class OrderService
             ]);
 
             // Create OrderItems and safely deduct stock with inventory movement ledger
-            foreach ($orderItemsData as $itemData) {
+            $couponService = app(CouponService::class);
+            foreach ($orderItemsData as $idx => $itemData) {
                 /** @var Product $product */
                 $product = $itemData['product'];
                 $qty = $itemData['quantity'];
                 $previousStock = $product->stock_quantity;
                 $newStock = $previousStock - $qty;
+
+                $lineAlloc = $couponResult['line_allocations'][$idx] ?? null;
+                $itemDiscountAmount = $lineAlloc ? (float) $lineAlloc['allocated_amount'] : 0.00;
+                $itemAllocCents = $lineAlloc ? (int) $lineAlloc['allocated_cents'] : 0;
+                $lineSubtotalCents = intval(bcmul((string) $itemData['unit_price'], '100', 0)) * $qty;
+                $unitSchedule = $couponService->computeUnitRefundSchedule($lineSubtotalCents, $itemAllocCents, $qty);
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -119,6 +164,11 @@ class OrderService
                     'cost_price' => $product->cost_price !== null ? (float) $product->cost_price : null, // Immutable historical cost snapshot
                     'quantity' => $qty,
                     'subtotal' => $itemData['line_subtotal'],
+                    'discount_amount' => $itemDiscountAmount,
+                    'unit_refund_schedule' => $unitSchedule,
+                    'refunded_unit_indexes' => [],
+                    'returned_quantity' => 0,
+                    'refunded_amount' => 0.00,
                 ]);
 
                 // Safely decrement inventory
@@ -134,6 +184,36 @@ class OrderService
                     'reason' => "Customer Order #{$order->order_number}",
                     'order_id' => $order->id,
                     'user_id' => $authenticatedUser?->id,
+                ]);
+
+                // Sync automatic low-stock alert lifecycle after stock deduction
+                $product->refresh();
+                app(LowStockAlertService::class)->syncForProduct($product, InventoryMovement::TYPE_ORDER_DEDUCTION);
+            }
+
+            // Record coupon usage and atomically increment usage count under lock
+            if ($couponResult) {
+                $lockedCoupon = \App\Models\Coupon::where('id', $couponResult['coupon']->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($lockedCoupon->usage_limit_total !== null && $lockedCoupon->times_used >= $lockedCoupon->usage_limit_total) {
+                    throw ValidationException::withMessages([
+                        'coupon' => 'This coupon reached its maximum usage limit while processing.',
+                    ]);
+                }
+
+                $lockedCoupon->increment('times_used');
+
+                \App\Models\CouponUsage::create([
+                    'coupon_id' => $lockedCoupon->id,
+                    'order_id' => $order->id,
+                    'customer_id' => $authenticatedUser?->id,
+                    'customer_email' => $order->customer_email ?? ($authenticatedUser?->email ?? 'guest@example.com'),
+                    'customer_phone' => $order->customer_phone,
+                    'discount_amount' => $couponDiscountAmount,
+                    'shipping_discount_amount' => $shippingDiscountAmount,
+                    'created_at' => now(),
                 ]);
             }
 

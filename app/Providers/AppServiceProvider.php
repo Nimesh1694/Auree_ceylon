@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\AgentAchievement;
+use App\Models\ProductReview;
+use App\Policies\AgentAchievementPolicy;
+use App\Policies\ProductReviewPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        Gate::policy(ProductReview::class, ProductReviewPolicy::class);
+        Gate::policy(AgentAchievement::class, AgentAchievementPolicy::class);
 
         // Grant Owner wildcard permission bypass EXCEPT when targeting protected Technical Authority
         Gate::before(function ($user, $ability, $arguments = []) {

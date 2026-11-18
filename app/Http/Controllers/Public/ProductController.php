@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\RecentlyViewedProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -96,6 +98,11 @@ class ProductController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
+        // Fail-open authenticated view recording (FV-03-04)
+        if (auth()->check() && auth()->user()->hasRole('customer')) {
+            app(RecentlyViewedProductService::class)->recordView(auth()->user(), $product->id);
+        }
+
         // Related products in the same category
         $relatedProducts = Product::with(['category', 'primaryImage'])
             ->where('is_active', true)
@@ -108,6 +115,33 @@ class ProductController extends Controller
             'product' => $product,
             'relatedProducts' => $relatedProducts,
         ]);
+    }
+
+    /**
+     * Batch retrieve active products for guest recently viewed carousel.
+     */
+    public function batch(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids');
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['products' => []]);
+        }
+
+        $cleanIds = array_slice(array_filter(array_map('intval', $ids), fn ($id) => $id > 0), 0, 15);
+        if (empty($cleanIds)) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = Product::with(['category', 'primaryImage'])
+            ->where('is_active', true)
+            ->whereIn('id', $cleanIds)
+            ->get();
+
+        // Preserve input order
+        $orderMap = array_flip($cleanIds);
+        $sorted = $products->sortBy(fn ($p) => $orderMap[$p->id] ?? 999)->values();
+
+        return response()->json(['products' => $sorted]);
     }
 }
 

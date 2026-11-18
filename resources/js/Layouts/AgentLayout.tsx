@@ -4,6 +4,7 @@ import React, { PropsWithChildren, useState } from 'react';
 
 export default function AgentLayout({ children }: PropsWithChildren) {
     const { auth, flash } = usePage<PageProps>().props;
+    const { url } = usePage();
     const [copied, setCopied] = useState(false);
 
     const referralCode = auth.user?.referral_code ?? '';
@@ -34,6 +35,14 @@ export default function AgentLayout({ children }: PropsWithChildren) {
                     </div>
 
                     <div className="flex items-center space-x-6 text-xs">
+                        <Link href="/agent/announcements" className="relative text-stone-300 hover:text-white flex items-center gap-1 font-medium">
+                            <span>📢 Announcements</span>
+                            {Number((auth as any).unread_announcements_count ?? 0) > 0 && (
+                                <span className="px-1.5 py-0.2 rounded-full bg-rose-600 text-[10px] font-bold text-white leading-tight">
+                                    {(auth as any).unread_announcements_count}
+                                </span>
+                            )}
+                        </Link>
                         <span className="text-stone-300 font-medium">
                             {auth.user?.name}
                         </span>
@@ -80,6 +89,17 @@ export default function AgentLayout({ children }: PropsWithChildren) {
                     <Link href="/agent/dashboard" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap">
                         Dashboard
                     </Link>
+                    <Link href="/agent/analytics" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap">
+                        Performance Analytics
+                    </Link>
+                    <Link href="/agent/announcements" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap flex items-center gap-1.5">
+                        <span>📢 Announcements</span>
+                        {Number((auth as any).unread_announcements_count ?? 0) > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-rose-600 text-[10px] font-bold text-white">
+                                {(auth as any).unread_announcements_count}
+                            </span>
+                        )}
+                    </Link>
                     <Link href="/agent/orders/create" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap">
                         + Place Customer Order
                     </Link>
@@ -94,6 +114,17 @@ export default function AgentLayout({ children }: PropsWithChildren) {
                     </Link>
                     <Link href="/agent/wallet/statements" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap">
                         Monthly Statements
+                    </Link>
+                    <Link
+                        href="/agent/achievements"
+                        className={`py-3 whitespace-nowrap border-b-2 transition-colors flex items-center gap-1.5 ${
+                            url?.startsWith('/agent/achievements')
+                                ? 'border-stone-900 text-stone-900 font-semibold'
+                                : 'border-transparent text-stone-700 hover:text-stone-900 hover:border-stone-900'
+                        }`}
+                    >
+                        <span>🏆</span>
+                        <span>Achievements</span>
                     </Link>
                     <Link href="/agent/team" className="py-3 text-stone-700 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-900 whitespace-nowrap">
                         My Downline Network

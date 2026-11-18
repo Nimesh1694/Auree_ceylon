@@ -192,6 +192,12 @@ class User extends Authenticatable
                     "Integrity Violation: User '{$user->name}' ({$user->email}) has commission payout records and cannot be deleted."
                 );
             }
+
+            if ($user->achievementAwards()->exists()) {
+                throw new \Illuminate\Auth\Access\AuthorizationException(
+                    "Integrity Violation: User '{$user->name}' ({$user->email}) has associated achievement awards and cannot be deleted."
+                );
+            }
         });
     }
 
@@ -259,6 +265,11 @@ class User extends Authenticatable
     public function walletTransactions(): HasMany
     {
         return $this->hasMany(WalletTransaction::class, 'agent_id');
+    }
+
+    public function announcementReads(): HasMany
+    {
+        return $this->hasMany(AgentAnnouncementRead::class, 'agent_id');
     }
 
     /**
@@ -372,6 +383,22 @@ class User extends Authenticatable
         }
 
         return $this->assignedRoles->contains(fn ($r) => $r->hasPermissionTo($permissionName));
+    }
+
+    public function hasRole(string|array $roles): bool
+    {
+        $roles = is_array($roles) ? $roles : [$roles];
+        $currentRole = $this->role instanceof UserRole ? $this->role->value : (string) $this->role;
+
+        if (in_array($currentRole, $roles, true)) {
+            return true;
+        }
+
+        if (in_array('owner', $roles, true) && $this->isOwner()) {
+            return true;
+        }
+
+        return $this->assignedRoles->contains(fn ($r) => in_array($r->name, $roles, true));
     }
 
     public function getPermissionsList(): array
@@ -507,5 +534,35 @@ class User extends Authenticatable
     public function hasTwoFactorEnabled(): bool
     {
         return !empty($this->two_factor_secret) && $this->two_factor_confirmed_at !== null;
+    }
+
+    public function recentlyViewedProducts(): HasMany
+    {
+        return $this->hasMany(RecentlyViewedProduct::class, 'customer_id');
+    }
+
+    public function salesTargets(): HasMany
+    {
+        return $this->hasMany(AgentSalesTarget::class, 'agent_id');
+    }
+
+    public function createdSalesTargets(): HasMany
+    {
+        return $this->hasMany(AgentSalesTarget::class, 'created_by');
+    }
+
+    public function achievementAwards(): HasMany
+    {
+        return $this->hasMany(AgentAchievementAward::class, 'agent_id');
+    }
+
+    public function achievementRequests(): HasMany
+    {
+        return $this->hasMany(AgentAchievementRequest::class, 'agent_id');
+    }
+
+    public function achievementStreaks(): HasMany
+    {
+        return $this->hasMany(AgentAchievementStreak::class, 'agent_id');
     }
 }

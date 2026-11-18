@@ -1,5 +1,7 @@
 import AgentLayout from '@/Layouts/AgentLayout';
 import { Order, User } from '@/types';
+import { AchievementDashboardSpotlightDTO } from '@/types/achievements';
+import { AchievementSpotlightCard } from '@/Components/Agent/Achievements';
 import { Head, Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 
@@ -18,9 +20,10 @@ interface Props {
         kyc_status: string;
     };
     recentOrders: Order[];
+    achievement_spotlight?: AchievementDashboardSpotlightDTO | null;
 }
 
-export default function AgentDashboard({ agent, stats, recentOrders }: Props) {
+export default function AgentDashboard({ agent, stats, recentOrders, achievement_spotlight }: Props) {
     const [copied, setCopied] = useState(false);
     const referralCode = agent.referral_code ?? '';
     const referralLink = typeof window !== 'undefined'
@@ -156,6 +159,9 @@ export default function AgentDashboard({ agent, stats, recentOrders }: Props) {
                         <span className="text-[10px] text-stone-400 block mt-1">Available balance</span>
                     </div>
                 </div>
+
+                {/* Achievement Spotlight Widget (FV-04-03 Stage 5) */}
+                <AchievementSpotlightCard spotlight={achievement_spotlight} />
 
                 {/* Split Action: Place Order & Recent Placed Orders */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

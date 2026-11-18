@@ -100,5 +100,14 @@
     "our_story_title": "ස්වභාවික සුන්දරත්වයේ රහස",
     "return_policy_title": "ආපසු භාරගැනීමේ ප්‍රතිපත්තිය",
     "privacy_policy_title": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
-    "terms_title": "කොන්දේසි සහ රෙගුලාසි"
+    "terms_title": "කොන්දේසි සහ රෙගුලාසි",
+    "back_in_stock_title": "නැවත තොග ලැබුණු විට මට දන්වන්න",
+    "back_in_stock_subtitle": "මෙම භාණ්ඩය නැවත තොග ලැබුණු වහාම විද්‍යුත් තැපැල් පණිවිඩයක් ලබා ගන්න.",
+    "back_in_stock_email_placeholder": "ඔබගේ විද්‍යුත් තැපැල් ලිපිනය ඇතුලත් කරන්න",
+    "back_in_stock_btn": "මට දන්වන්න",
+    "back_in_stock_subscribing_as": "දැනුම්දීම් ලබන ලිපිනය",
+    "back_in_stock_disclaimer": "දැනුම්දීම් මඟින් භාණ්ඩය වෙන්කර තැබීමක් හෝ තොග ලබා දීමේ සහතිකයක් සිදු නොවේ.",
+    "back_in_stock_subscribed_success": "ඔබ සාර්ථකව ලියාපදිංචි විය! නැවත තොග ලැබුණු විට ඔබට දන්වනු ලැබේ.",
+    "back_in_stock_verification_sent": "ඔබගේ ඉල්ලීම තහවුරු කිරීමට කරුණාකර ඔබගේ විද්‍යුත් තැපෑල පරීක්ෂා කරන්න.",
+    "back_in_stock_already_subscribed": "ඔබ දැනටමත් මෙම භාණ්ඩය සඳහා ලියාපදිංචි වී ඇත."
 }

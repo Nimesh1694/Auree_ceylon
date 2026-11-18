@@ -18,7 +18,8 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Prevent destructive test runs from touching non-SQLite databases that do not end with "_test".
+     * Prevent destructive test runs from touching non-SQLite databases other than the
+     * explicitly authorized disposable test database.
      */
     public static function assertIsolatedTestDatabase(): void
     {
@@ -30,9 +31,9 @@ abstract class TestCase extends BaseTestCase
 
         $dbName = (string) config("database.connections.{$defaultConnection}.database");
 
-        if ($dbName !== ':memory:' && !str_ends_with($dbName, '_test')) {
+        if ($dbName !== 'auraluxe_disposable_test') {
             throw new RuntimeException(
-                "SAFETY ABORT: Non-SQLite test execution refused because database '{$dbName}' on connection '{$defaultConnection}' does not end with '_test'."
+                "SAFETY ABORT: Non-SQLite test execution refused. Only the authorized disposable database 'auraluxe_disposable_test' is permitted."
             );
         }
     }

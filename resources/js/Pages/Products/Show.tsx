@@ -1,9 +1,11 @@
 import ProductCard from '@/Components/ProductCard';
+import RecentlyViewedProducts from '@/Components/RecentlyViewedProducts';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useTranslation } from '@/hooks/useTranslation';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { Product } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import React, { useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
 
 interface Props {
     product: Product;
@@ -12,11 +14,23 @@ interface Props {
 
 export default function ProductShow({ product, relatedProducts }: Props) {
     const { t, locale } = useTranslation();
+    const { auth } = usePage().props as any;
+    const { recordGuestView } = useRecentlyViewed(auth?.user);
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
     const [activeTab, setActiveTab] = useState<'desc' | 'ingredients' | 'directions'>('desc');
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [imageError, setImageError] = useState(false);
+    const [bisEmail, setBisEmail] = useState(auth?.user?.email ?? '');
+    const [bisLoading, setBisLoading] = useState(false);
+    const [bisSuccess, setBisSuccess] = useState<string | null>(null);
+    const [bisError, setBisError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!auth?.user) {
+            recordGuestView(product.id);
+        }
+    }, [product.id, auth?.user?.id]);
 
     const name = locale === 'si' && product.name_si ? product.name_si : product.name_en;
     const desc = locale === 'si' && product.description_si ? product.description_si : product.description_en;
@@ -53,6 +67,40 @@ export default function ProductShow({ product, relatedProducts }: Props) {
             {
                 preserveScroll: true,
                 onFinish: () => setAdding(false),
+            }
+        );
+    };
+
+    const handleBackInStockSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (bisLoading) return;
+
+        setBisLoading(true);
+        setBisError(null);
+        setBisSuccess(null);
+
+        router.post(
+            '/back-in-stock/subscribe',
+            {
+                product_id: product.id,
+                email: bisEmail,
+                locale,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    setBisLoading(false);
+                    const flash = (page.props as any)?.flash;
+                    if (flash?.success) {
+                        setBisSuccess(flash.success);
+                    } else {
+                        setBisSuccess(t('back_in_stock_subscribed_success', "You're subscribed! We'll email you when this item is back in stock."));
+                    }
+                },
+                onError: (errors) => {
+                    setBisLoading(false);
+                    setBisError(errors.email || errors.product_id || t('error_occurred', 'Failed to subscribe. Please try again.'));
+                },
             }
         );
     };
@@ -237,48 +285,105 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                 )}
                             </div>
 
-                            {/* Purchase Form */}
-                            <form onSubmit={handleAddToCart} className="mt-8 space-y-4">
-                                <div className="flex items-center gap-4">
-                                    {/* Quantity Counter */}
-                                    <div className="flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
+                            {inStock ? (
+                                /* Purchase Form */
+                                <form onSubmit={handleAddToCart} className="mt-8 space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        {/* Quantity Counter */}
+                                        <div className="flex items-center border border-stone-300 rounded-xl bg-white shadow-xs">
+                                            <button
+                                                type="button"
+                                                disabled={!inStock || quantity <= 1}
+                                                onClick={() => handleQuantityChange(-1)}
+                                                className="px-3.5 py-3 text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
+                                                aria-label="Decrease quantity"
+                                            >
+                                                −
+                                            </button>
+                                            <span className="w-10 text-center text-sm font-semibold text-stone-900">
+                                                {quantity}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                disabled={!inStock || quantity >= product.stock_quantity}
+                                                onClick={() => handleQuantityChange(1)}
+                                                className="px-3.5 py-3 text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
+                                                aria-label="Increase quantity"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                        {/* Add to Cart Button */}
                                         <button
-                                            type="button"
-                                            disabled={!inStock || quantity <= 1}
-                                            onClick={() => handleQuantityChange(-1)}
-                                            className="px-3.5 py-3 text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
-                                            aria-label="Decrease quantity"
+                                            type="submit"
+                                            disabled={!inStock || adding}
+                                            className="flex-1 py-3.5 px-6 bg-stone-900 hover:bg-rose-900 disabled:bg-stone-300 text-white text-xs uppercase tracking-[0.2em] font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:cursor-not-allowed"
                                         >
-                                            −
-                                        </button>
-                                        <span className="w-10 text-center text-sm font-semibold text-stone-900">
-                                            {quantity}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            disabled={!inStock || quantity >= product.stock_quantity}
-                                            onClick={() => handleQuantityChange(1)}
-                                            className="px-3.5 py-3 text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
-                                            aria-label="Increase quantity"
-                                        >
-                                            +
+                                            {adding
+                                                ? 'Adding...'
+                                                : t('add_to_cart', 'Add to Cart')}
                                         </button>
                                     </div>
+                                </form>
+                            ) : (
+                                /* Back in Stock Subscription Form */
+                                <div className="mt-8 p-6 bg-stone-50 border border-stone-200 rounded-2xl shadow-xs">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-amber-700 text-sm">🔔</span>
+                                        <h3 className="font-serif text-base font-semibold text-stone-900">
+                                            {t('back_in_stock_title', 'Notify Me When Available')}
+                                        </h3>
+                                    </div>
+                                    <p className="text-xs text-stone-600 mb-4 leading-relaxed">
+                                        {t('back_in_stock_subtitle', 'Get an email alert as soon as this item is back in stock.')}
+                                    </p>
 
-                                    {/* Add to Cart Button */}
-                                    <button
-                                        type="submit"
-                                        disabled={!inStock || adding}
-                                        className="flex-1 py-3.5 px-6 bg-stone-900 hover:bg-rose-900 disabled:bg-stone-300 text-white text-xs uppercase tracking-[0.2em] font-semibold rounded-xl shadow-md transition-all cursor-pointer disabled:cursor-not-allowed"
-                                    >
-                                        {adding
-                                            ? 'Adding...'
-                                            : inStock
-                                            ? t('add_to_cart', 'Add to Cart')
-                                            : t('out_of_stock', 'Out of Stock')}
-                                    </button>
+                                    {bisSuccess ? (
+                                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium">
+                                            ✓ {bisSuccess}
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleBackInStockSubmit} className="space-y-3">
+                                            {bisError && (
+                                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs">
+                                                    {bisError}
+                                                </div>
+                                            )}
+
+                                            {auth?.user && auth?.user?.email_verified_at ? (
+                                                <div className="text-xs text-stone-600 bg-white p-3 rounded-xl border border-stone-200">
+                                                    <span className="text-stone-400">{t('back_in_stock_subscribing_as', 'Subscribing as')}: </span>
+                                                    <strong className="text-stone-900">{auth.user.email}</strong>
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={bisEmail}
+                                                    onChange={(e) => setBisEmail(e.target.value)}
+                                                    placeholder={t('back_in_stock_email_placeholder', 'Enter your email address')}
+                                                    className="w-full text-xs px-4 py-3 rounded-xl border border-stone-300 focus:border-amber-700 focus:ring-1 focus:ring-amber-700 bg-white text-stone-900"
+                                                />
+                                            )}
+
+                                            <button
+                                                type="submit"
+                                                disabled={bisLoading}
+                                                className="w-full py-3.5 px-6 bg-stone-900 hover:bg-amber-900 disabled:bg-stone-400 text-white text-xs uppercase tracking-[0.2em] font-semibold rounded-xl shadow-md transition-all cursor-pointer"
+                                            >
+                                                {bisLoading
+                                                    ? 'Subscribing...'
+                                                    : t('back_in_stock_btn', 'Notify Me')}
+                                            </button>
+
+                                            <p className="text-[11px] text-stone-400 leading-tight">
+                                                {t('back_in_stock_disclaimer', 'Alerts do not reserve inventory and notification does not guarantee stock availability.')}
+                                            </p>
+                                        </form>
+                                    )}
                                 </div>
-                            </form>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -362,6 +467,9 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                         </div>
                     </div>
                 )}
+
+                {/* Recently Viewed Products (FV-03-04) */}
+                <RecentlyViewedProducts currentProductId={product.id} />
             </div>
         </PublicLayout>
     );

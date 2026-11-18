@@ -100,5 +100,14 @@
     "our_story_title": "Botanical Radiance, Modern Luxury",
     "return_policy_title": "Return & Refund Policy",
     "privacy_policy_title": "Privacy Policy",
-    "terms_title": "Terms & Conditions"
+    "terms_title": "Terms & Conditions",
+    "back_in_stock_title": "Notify Me When Available",
+    "back_in_stock_subtitle": "Get an email alert as soon as this item is back in stock.",
+    "back_in_stock_email_placeholder": "Enter your email address",
+    "back_in_stock_btn": "Notify Me",
+    "back_in_stock_subscribing_as": "Subscribing as",
+    "back_in_stock_disclaimer": "Alerts do not reserve inventory and notification does not guarantee stock availability.",
+    "back_in_stock_subscribed_success": "You're subscribed! We'll email you when this item is back in stock.",
+    "back_in_stock_verification_sent": "Please check your inbox to confirm your alert request.",
+    "back_in_stock_already_subscribed": "You are already subscribed to alerts for this item."
 }

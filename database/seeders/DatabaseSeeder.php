@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         // Always initialize baseline RBAC roles and permissions idempotently across all environments
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(InquiryPermissionSeeder::class);
+        $this->call(AgentAchievementSeeder::class);
 
         // Strictly block demo accounts, hardcoded development passwords, and sample catalog outside local/testing
         if (!app()->environment(['local', 'testing'])) {

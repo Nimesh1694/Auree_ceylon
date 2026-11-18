@@ -6,6 +6,9 @@ use App\Models\AuditLog;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderReceipt;
+use App\Models\RestockEvent;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +25,9 @@ class StockService
         string $movementType,
         ?string $reason = null,
         ?Order $order = null,
-        ?User $user = null
+        ?User $user = null,
+        ?PurchaseOrder $purchaseOrder = null,
+        ?PurchaseOrderReceipt $purchaseOrderReceipt = null
     ): InventoryMovement {
         if ($quantityDelta === 0) {
             throw ValidationException::withMessages([
@@ -30,9 +35,60 @@ class StockService
             ]);
         }
 
-        return DB::transaction(function () use ($product, $quantityDelta, $movementType, $reason, $order, $user) {
+        return DB::transaction(function () use (
+            $product,
+            $quantityDelta,
+            $movementType,
+            $reason,
+            $order,
+            $user,
+            $purchaseOrder,
+            $purchaseOrderReceipt
+        ) {
+            // OBS-03: Validate PurchaseOrder & PurchaseOrderReceipt integrity inside transaction.
+            if ($purchaseOrder !== null || $purchaseOrderReceipt !== null) {
+                if ($purchaseOrder === null || $purchaseOrderReceipt === null) {
+                    throw ValidationException::withMessages([
+                        'purchase_order' => 'Both a valid purchase order and receipt are required for PO stock movements.',
+                    ]);
+                }
+
+                if ($movementType !== InventoryMovement::TYPE_RESTOCK || $quantityDelta <= 0) {
+                    throw ValidationException::withMessages([
+                        'movement_type' => 'Purchase order receipt stock movements must use positive restock quantities.',
+                    ]);
+                }
+
+                if ((int) $purchaseOrderReceipt->purchase_order_id !== (int) $purchaseOrder->id) {
+                    throw ValidationException::withMessages([
+                        'purchase_order_receipt' => 'The supplied receipt does not belong to the supplied purchase order.',
+                    ]);
+                }
+
+                if (!in_array($purchaseOrder->status, [
+                    PurchaseOrder::STATUS_ORDERED,
+                    PurchaseOrder::STATUS_PARTIALLY_RECEIVED,
+                ], true)) {
+                    throw ValidationException::withMessages([
+                        'purchase_order' => 'Purchase order is not in an eligible state for receiving stock.',
+                    ]);
+                }
+            }
+
             /** @var Product $lockedProduct */
             $lockedProduct = Product::where('id', $product->id)->lockForUpdate()->firstOrFail();
+
+            if ($purchaseOrderReceipt !== null) {
+                $alreadyApplied = InventoryMovement::where('purchase_order_receipt_id', $purchaseOrderReceipt->id)
+                    ->where('product_id', $lockedProduct->id)
+                    ->exists();
+
+                if ($alreadyApplied) {
+                    throw ValidationException::withMessages([
+                        'purchase_order_receipt' => 'Stock movement for this receipt item has already been applied.',
+                    ]);
+                }
+            }
 
             $previousStock = $lockedProduct->stock_quantity;
             $newStock = $previousStock + $quantityDelta;
@@ -56,6 +112,8 @@ class StockService
                 'new_stock' => $newStock,
                 'reason' => $reason,
                 'order_id' => $order?->id,
+                'purchase_order_id' => $purchaseOrder?->id,
+                'purchase_order_receipt_id' => $purchaseOrderReceipt?->id,
                 'user_id' => $user?->id ?? auth()->id(),
             ]);
 
@@ -67,7 +125,15 @@ class StockService
                 'delta' => $quantityDelta,
                 'type' => $movementType,
                 'reason' => $reason,
+                'purchase_order_id' => $purchaseOrder?->id,
+                'purchase_order_receipt_id' => $purchaseOrderReceipt?->id,
             ]);
+
+            // Sync automatic low-stock alert lifecycle inside the same transaction
+            app(LowStockAlertService::class)->syncForProduct($lockedProduct, $movementType);
+
+            // Sync back-in-stock alert lifecycle when product transitions from unavailable to available
+            $this->recordRestockEventIfQualifying($lockedProduct, $previousStock, $newStock, $quantityDelta);
 
             return $movement;
         });
@@ -137,10 +203,32 @@ class StockService
                     'order_number' => $order->order_number,
                     'restored_quantity' => $item->quantity,
                 ]);
+
+                app(LowStockAlertService::class)->syncForProduct($product, $movementType);
+
+                // Sync back-in-stock alert lifecycle when product transitions from unavailable to available
+                $this->recordRestockEventIfQualifying($product, $previousStock, $newStock, $item->quantity);
             }
 
             return $movements;
         });
+    }
+
+    /**
+     * Hook to detect and record a back-in-stock restock event if product transitioned from unavailable to available.
+     */
+    protected function recordRestockEventIfQualifying(
+        Product $product,
+        int $previousStock,
+        int $newStock,
+        int $quantityDelta
+    ): ?RestockEvent {
+        return app(BackInStockService::class)->recordRestockEventIfQualifying(
+            $product,
+            $previousStock,
+            $newStock,
+            $quantityDelta
+        );
     }
 }
 

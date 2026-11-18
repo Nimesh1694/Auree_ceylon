@@ -33,12 +33,9 @@ class HandleInertiaRequests extends Middleware
     {
         $locale = App::getLocale();
         $translationsPath = base_path("lang/{$locale}.json");
-        $translations = File::exists($translationsPath)
-            ? json_decode(File::get($translationsPath), true) ?? []
-            : [];
 
         $user = $request->user();
-        if ($user) {
+        if ($user && ($request->header('X-Inertia') || !$request->expectsJson())) {
             $user->loadMissing('agentProfile');
         }
 
@@ -51,9 +48,14 @@ class HandleInertiaRequests extends Middleware
                 'is_super_admin' => fn () => $user ? $user->isSuperAdmin() : false,
                 'is_business_authority' => fn () => $user ? $user->isBusinessAuthority() : false,
                 'is_technical_authority' => fn () => $user ? $user->isTechnicalAuthority() : false,
+                'unread_announcements_count' => fn () => ($user && $user->isAgent() && $user->status === 'active')
+                    ? app(\App\Services\AgentAnnouncementService::class)->getUnreadCountForAgent($user)
+                    : 0,
             ],
             'locale' => $locale,
-            'translations' => $translations,
+            'translations' => fn () => File::exists($translationsPath)
+                ? (json_decode(File::get($translationsPath), true) ?? [])
+                : [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

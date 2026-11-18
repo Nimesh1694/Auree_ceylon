@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\AgentAchievementPortalService;
 use App\Services\AgentHierarchyService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,7 +14,8 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     public function __construct(
-        private readonly AgentHierarchyService $hierarchyService
+        private readonly AgentHierarchyService $hierarchyService,
+        private readonly AgentAchievementPortalService $achievementPortalService
     ) {}
 
     /**
@@ -60,6 +62,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $achievementSpotlight = $this->achievementPortalService->getDashboardSpotlightPayload($agent);
+
         return Inertia::render('Agent/Dashboard', [
             'agent' => $agent,
             'stats' => [
@@ -75,6 +79,7 @@ class DashboardController extends Controller
                 'kyc_status' => $agent->agentProfile?->kyc_status ?? 'pending',
             ],
             'recentOrders' => $recentOrders,
+            'achievement_spotlight' => $achievementSpotlight,
         ]);
     }
 }

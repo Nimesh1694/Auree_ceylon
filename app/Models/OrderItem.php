@@ -19,6 +19,11 @@ class OrderItem extends Model
         'cost_price',
         'quantity',
         'subtotal',
+        'discount_amount',
+        'unit_refund_schedule',
+        'refunded_unit_indexes',
+        'returned_quantity',
+        'refunded_amount',
     ];
 
     /**
@@ -35,7 +40,12 @@ class OrderItem extends Model
             'unit_price' => 'decimal:2',
             'cost_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'refunded_amount' => 'decimal:2',
             'quantity' => 'integer',
+            'returned_quantity' => 'integer',
+            'unit_refund_schedule' => 'array',
+            'refunded_unit_indexes' => 'array',
         ];
     }
 

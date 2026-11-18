@@ -27,6 +27,8 @@ class InventoryMovement extends Model
         'new_stock',
         'reason',
         'order_id',
+        'purchase_order_id',
+        'purchase_order_receipt_id',
         'user_id',
     ];
 
@@ -47,6 +49,16 @@ class InventoryMovement extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function purchaseOrderReceipt(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrderReceipt::class);
     }
 
     public function user(): BelongsTo

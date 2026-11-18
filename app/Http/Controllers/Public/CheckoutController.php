@@ -83,13 +83,15 @@ class CheckoutController extends Controller
 
         $user = $request->user();
         $referralCode = $request->session()->get('referral_code');
+        $couponCode = $cartService->getAppliedCouponCode();
 
         $order = $orderService->createOrder(
             customerData: $validated,
             rawCart: $rawCart,
             authenticatedUser: $user,
             referralCode: $referralCode,
-            agentId: null
+            agentId: null,
+            couponCode: $couponCode
         );
 
         // Optional address saving for authenticated customer (Phase 5 Step 3 Phase D)
@@ -128,6 +130,63 @@ class CheckoutController extends Controller
         return Inertia::render('Checkout/Confirmation', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Apply coupon to current cart/checkout session.
+     */
+    public function applyCoupon(Request $request, CartService $cartService, \App\Services\CouponService $couponService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'coupon_code' => 'required|string|max:50',
+        ]);
+
+        $rawCart = $cartService->getRawCart();
+        if (empty($rawCart)) {
+            return back()->withErrors(['coupon' => 'Your cart is empty.']);
+        }
+
+        $cart = $cartService->getDetails();
+        $cartItemsForCalc = [];
+        foreach ($cart['items'] as $idx => $it) {
+            $cartItemsForCalc[] = [
+                'id' => $idx + 1,
+                'product_id' => $it['product_id'],
+                'category_id' => $it['category_id'] ?? null,
+                'quantity' => $it['quantity'],
+                'unit_price' => $it['unit_price'],
+            ];
+        }
+
+        $referralCode = $request->session()->get('referral_code');
+        $user = $request->user();
+
+        try {
+            $calc = $couponService->validateAndCalculate(
+                couponOrCode: $validated['coupon_code'],
+                cartItems: $cartItemsForCalc,
+                customer: $user,
+                customerEmail: $user?->email,
+                customerPhone: $user?->phone,
+                deliveryCharge: $cart['delivery_charge'] ?? 350.00,
+                referralCode: $referralCode
+            );
+
+            $cartService->applyCoupon($calc['coupon']->code);
+
+            return back()->with('success', "Coupon '{$calc['coupon']->code}' applied successfully!");
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+    }
+
+    /**
+     * Remove applied coupon from checkout session.
+     */
+    public function removeCoupon(CartService $cartService): RedirectResponse
+    {
+        $cartService->removeCoupon();
+        return back()->with('success', 'Coupon removed.');
     }
 }
 

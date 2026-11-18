@@ -1,22 +1,38 @@
 # Aura Luxe Botanical Cosmetics — E-Commerce & Multi-Level Agent Network
 
-A production-ready cosmetic brand e-commerce platform featuring a multi-level agent network, real-time inventory locking, Cash on Delivery (COD) order management, courier tracking, and an authorized agent portal.
+An e-commerce and multi-level agent network platform for Aura Luxe Botanical Cosmetics, featuring real-time inventory locking, Cash on Delivery (COD) order management, courier tracking, and an authorized agent portal.
 
 Built with **Laravel 12 (PHP 8.2+)**, **React 18**, **TypeScript**, **Inertia.js**, and **Tailwind CSS**. Designed specifically for shared hosting (cPanel) compatibility without requiring Docker or Redis.
 
+- **Repository:** `Nimesh1694/Auree_ceylon` (Default Branch: `main`)
+
 ---
 
-## Current Status: Phase 6 Complete
+## Current Status: Staging Certified (TSK-PROD-01 Closed with Observations) — Production Cutover Pending
 
-| Phase | Description | Status | Test Coverage |
+> [!IMPORTANT]
+> **Production Readiness Disclaimer:** While local development milestones and MySQL 8 / InnoDB staging certification (`TSK-PROD-01`) are complete, this application is **not yet deployed or certified for production cutover**. Production deployment remains gated on `PROD-02` through `PROD-07` and backup/restore + TLS runbook validation.
+
+### Completed Development & Staging Milestones
+
+| Milestone / Phase | Description | Status | Verified Test / Certification Evidence |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | Foundation Architecture, Auth, Roles, Closure Table Hierarchy | **Audited & Passed** | 40 tests, 112 assertions |
-| **Phase 2** | Customer Storefront, Cart, COD Checkout, Guest Tracking | **Audited & Passed** | 62 tests, 287 assertions |
-| **Phase 3** | Inventory & Order Management, Courier & COD Reconciliation | **Audited & Passed** | 97 tests, 490 assertions |
-| **Phase 4** | Multi-Level Agent Network, Agent Portal & Administration | **Audited & Passed** | 133 tests, 737 assertions |
-| **Phase 5** | Multi-Tier Commission Calculation Engine & Immutable Ledger | **Audited & Passed** | 168 tests, 848 assertions |
-| **Phase 6** | Agent Wallet, Commission Payouts & Statements | **Implemented & Verified** | **191 tests, 1030 assertions** |
-| **Phase 7** | Reports, Analytics & cPanel Deployment Package | *Pending Approval* | — |
+| **Phase 1–6 Core Platform** | Auth, RBAC, Closure Hierarchy, Storefront, COD Checkout, Inventory, Commissions, Wallets & Payouts | **Completed** | Covered in full regression suite |
+| **Phase 5 Step 4 & Step 5 Core** | Transactional Lifecycle Emails, PDF Invoices, Contact Inquiries & Admin Console, Branded Error Pages, Production-Safe Seeder (`TSK-SEED-01`) | **Completed** | **SQLite:** `717` passed (`4,551` assertions) |
+| **TSK-PROD-01 (MySQL 8 / InnoDB)** | Local MySQL `8.0.46` / `InnoDB` Staging Certification (`24/24` migrations, `38` InnoDB tables, `5` `RESTRICT` FKs, `20/20` payout concurrency iterations) | **Closed — PASS WITH OBSERVATIONS** | **MySQL 8.0.46 (Phase C):** `715` passed (`4,538` assertions)<br>**Concurrency (Phase D):** `20/20` iterations (`80` worker runs) |
+| **FV-03-05 (Back-in-Stock Alerts)** | Out-of-Stock Subscription, Guest DOI, Anti-Scanner Safe Verify/Unsubscribe, FIFO Batch Allocation, Fencing Leases & Quota Accounting | **Closed — PROJECT OWNER ACCEPTED** | **Regression Suites:** `84` passed (`648` assertions)<br>**MySQL 8.0.46 (Port 3307):** Transactional & multi-worker contention verified |
+
+*(Note on `TSK-PROD-01` Observations: Multi-process payout settlement and normalized duplicate bank-reference collision are concurrency-certified; multi-process commission maturation/reversal and inventory stock deduction remain covered by single-process PHPUnit tests only.)*
+
+### Remaining Production-Cutover Prerequisites
+
+- **Backup/Restore & TLS Runbook:** Verified `mysqldump` backup/restore drill and MySQL TLS (`MYSQL_ATTR_SSL_CA`) configuration.
+- **PROD-02:** Security and Environment Hardening.
+- **PROD-03:** Encrypted Offsite Backups.
+- **PROD-04:** Production SMTP Configuration.
+- **PROD-05:** cPanel Cron and Queue Configuration.
+- **PROD-06:** Storage Symlink and SSL Configuration.
+- **PROD-07:** Staging End-to-End Smoke Tests.
 
 ---
 
@@ -171,8 +187,11 @@ Built with **Laravel 12 (PHP 8.2+)**, **React 18**, **TypeScript**, **Inertia.js
 ## Verification & Automated Testing
 
 ```bash
-# Run PHPUnit test suite (168 tests, 848 assertions)
-php .\vendor\bin\phpunit
+# Run PHPUnit test suite on SQLite (717 passed, 4,551 assertions)
+php artisan test
+
+# Run PHPUnit test suite on isolated MySQL 8.0.46 / InnoDB (Phase C: 715 passed, 4,538 assertions)
+php artisan test -c phpunit.mysql.xml
 
 # Run TypeScript strict type-check (0 errors)
 npx tsc --noEmit

@@ -174,7 +174,30 @@ class MysqlConcurrencyCommandTest extends TestCase
 
         try {
             $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage("does not end with '_test'");
+            $this->expectExceptionMessage(
+                "SAFETY ABORT: Non-SQLite test execution refused. Only the authorized disposable database 'auraluxe_disposable_test' is permitted."
+            );
+
+            TestCase::assertIsolatedTestDatabase();
+        } finally {
+            Config::set('database.connections.mysql.database', $originalMysqlDb);
+            Config::set('database.default', $originalDefault);
+        }
+    }
+
+    public function test_testcase_isolation_guard_blocks_staging_database(): void
+    {
+        $originalDefault = Config::get('database.default');
+        $originalMysqlDb = Config::get('database.connections.mysql.database');
+
+        Config::set('database.default', 'mysql');
+        Config::set('database.connections.mysql.database', 'auraluxe_staging_test');
+
+        try {
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage(
+                "SAFETY ABORT: Non-SQLite test execution refused. Only the authorized disposable database 'auraluxe_disposable_test' is permitted."
+            );
 
             TestCase::assertIsolatedTestDatabase();
         } finally {
@@ -189,7 +212,7 @@ class MysqlConcurrencyCommandTest extends TestCase
         $originalMysqlDb = Config::get('database.connections.mysql.database');
 
         Config::set('database.default', 'mysql');
-        Config::set('database.connections.mysql.database', 'auraluxe_staging_test');
+        Config::set('database.connections.mysql.database', 'auraluxe_disposable_test');
 
         try {
             TestCase::assertIsolatedTestDatabase();

@@ -1,3 +1,4 @@
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PageProps } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
@@ -7,6 +8,9 @@ export default function PublicLayout({ children }: PropsWithChildren) {
     const { auth, locale, cartCount, flash } = usePage<PageProps>().props;
     const { t } = useTranslation();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Global recently viewed lifecycle & cross-tab sync
+    useRecentlyViewed(auth?.user);
 
     const switchLocale = (newLocale: string) => {
         if (newLocale === locale) return;
