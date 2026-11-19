@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "node -e \"try { fs.unlinkSync('public/hot') } catch {}\" && tsc && vite build",
-        "dev": "vite"
+        "dev": "node dev-runner.js",
+        "vite": "vite"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

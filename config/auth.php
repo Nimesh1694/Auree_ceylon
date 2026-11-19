@@ -114,4 +114,15 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Two-Factor Authentication Bypass
+    |--------------------------------------------------------------------------
+    |
+    | When enabled (e.g. in local development or staging), management accounts
+    | bypass mandatory 2FA enrollment and challenge prompts for seamless testing.
+    |
+    */
+    'two_factor_bypass' => env('TWO_FACTOR_BYPASS', false),
+
 ];

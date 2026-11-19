@@ -48,6 +48,11 @@ class AuthenticatedSessionController extends Controller
 
         // Enforce Mandatory Two-Factor Authentication for all management accounts (Phase 5 Step 2)
         if ($user && $user->isManagement()) {
+            if (config('auth.two_factor_bypass', env('TWO_FACTOR_BYPASS', false))) {
+                $request->session()->put('two_factor_authenticated', true);
+                return redirect()->intended(route('admin.dashboard', absolute: false));
+            }
+
             if ($user->hasTwoFactorEnabled()) {
                 $request->session()->put('two_factor_authenticated', false);
                 return redirect()->route('two-factor.challenge');

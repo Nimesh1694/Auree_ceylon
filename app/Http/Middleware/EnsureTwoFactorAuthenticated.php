@@ -44,6 +44,11 @@ class EnsureTwoFactorAuthenticated
             return $next($request);
         }
 
+        // Allow bypassing 2FA in local development / testing if configured
+        if (config('auth.two_factor_bypass', env('TWO_FACTOR_BYPASS', false))) {
+            return $next($request);
+        }
+
         $currentRoute = $request->route() ? $request->route()->getName() : null;
 
         // 1. Mandatory Enrollment: Unenrolled management accounts MUST complete 2FA setup first
