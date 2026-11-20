@@ -285,8 +285,57 @@ export default function CustomerOrdersIndex({ orders, filters, customer }: Props
                             </div>
                         ) : (
                             <>
-                                {/* Desktop Table */}
-                                <div className="overflow-x-auto">
+                                {/* Mobile Cards View (<= 640px) */}
+                                <div className="sm:hidden divide-y divide-stone-100">
+                                    {orders.data.map((ord) => {
+                                        const badge = getStatusBadge(ord.status);
+                                        return (
+                                            <div key={ord.id} className="p-4 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <Link
+                                                        href={`/customer/orders/${ord.order_number}`}
+                                                        className="font-mono font-semibold text-stone-900 text-sm hover:text-amber-800"
+                                                    >
+                                                        #{ord.order_number}
+                                                    </Link>
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium border ${badge.color}`}>
+                                                        {badge.label}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-stone-600">
+                                                    <div className="font-medium text-stone-800 line-clamp-1">{ord.first_item_name}</div>
+                                                    <div className="text-[11px] text-stone-400 mt-0.5">
+                                                        {ord.placed_at} &bull; {ord.items_count} {ord.items_count === 1 ? 'item' : 'items'}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between pt-1">
+                                                    <span className="font-semibold text-stone-900 text-sm">
+                                                        {ord.total_amount_formatted}
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <Link
+                                                            href={`/customer/orders/${ord.order_number}`}
+                                                            className="inline-flex items-center gap-1 min-h-[44px] px-3 py-2 text-xs font-semibold text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-lg cursor-pointer transition-colors"
+                                                        >
+                                                            <span>Details</span>
+                                                            <Icons.ChevronRight className="w-3.5 h-3.5" />
+                                                        </Link>
+                                                        <Link
+                                                            href="/track"
+                                                            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-stone-500 hover:text-stone-800 p-2 rounded-lg bg-stone-50 border border-stone-200"
+                                                            title="Track order"
+                                                        >
+                                                            <Icons.Truck className="w-4 h-4" />
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Desktop Table (> 640px) */}
+                                <div className="hidden sm:block overflow-x-auto">
                                     <table className="w-full text-left text-xs text-stone-600">
                                         <thead className="bg-stone-50/80 text-[11px] uppercase tracking-wider text-stone-500 border-b border-stone-100 font-mono">
                                             <tr>

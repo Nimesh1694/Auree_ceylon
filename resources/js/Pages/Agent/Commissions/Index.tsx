@@ -127,7 +127,7 @@ export default function Index({ entries, filters, stats }: IndexProps) {
                 </div>
 
                 {/* Metrics Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                         <span className="text-xs font-semibold text-amber-700 uppercase">Pending Approval</span>
                         <p className="text-2xl font-bold text-slate-900 mt-1 font-mono">
@@ -204,7 +204,42 @@ export default function Index({ entries, filters, stats }: IndexProps) {
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <>
+                            {/* Mobile Cards (<= 640px) */}
+                            <div className="sm:hidden divide-y divide-slate-100">
+                                {entries.data.map((entry) => (
+                                    <div key={entry.id} className="p-4 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-mono font-bold text-xs text-slate-900">
+                                                {entry.order?.order_number || `#${entry.order_id}`}
+                                            </span>
+                                            {getStatusBadge(entry.status)}
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <div>{getTypeBadge(entry.commission_type)}</div>
+                                            <span className="text-slate-400 font-mono text-[11px]">
+                                                {entry.entry_number}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-1 text-xs">
+                                            <span className="text-slate-500">
+                                                Base: LKR {Number(entry.base_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} ({Number(entry.rate_percentage)}%)
+                                            </span>
+                                            <span className={`font-mono font-bold text-sm ${
+                                                Number(entry.calculated_amount) < 0 ? 'text-red-600' : 'text-emerald-700'
+                                            }`}>
+                                                {Number(entry.calculated_amount) < 0 ? '-' : '+'} LKR {Math.abs(Number(entry.calculated_amount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 text-right">
+                                            {new Date(entry.created_at).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop Table (> 640px) */}
+                            <div className="hidden sm:block overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-600">
                                 <thead className="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                     <tr>
@@ -254,6 +289,7 @@ export default function Index({ entries, filters, stats }: IndexProps) {
                                 </tbody>
                             </table>
                         </div>
+                    </>
                     )}
 
                     {/* Pagination */}

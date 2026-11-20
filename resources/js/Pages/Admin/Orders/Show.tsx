@@ -301,7 +301,8 @@ export default function OrderShow({ order, auditLogs, couriers }: Props) {
                                 </span>
                             </div>
 
-                            <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
                                 <thead className="bg-slate-50 dark:bg-[#1E293B]/70 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                                     <tr>
                                         <th className="px-6 py-3.5">Item Snapshot</th>
@@ -330,6 +331,7 @@ export default function OrderShow({ order, auditLogs, couriers }: Props) {
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
 
                             <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-end space-y-1.5 text-xs font-mono">
                                 <div className="flex justify-between w-64 text-slate-600 dark:text-slate-400">

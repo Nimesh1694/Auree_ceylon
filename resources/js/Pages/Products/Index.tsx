@@ -41,6 +41,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
     const [selectedSort, setSelectedSort] = useState(
         typeof safeFilters.sort === 'string' ? safeFilters.sort : 'newest'
     );
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     const handleFilterSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -109,8 +110,28 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Mobile Filters Toggle Button */}
+                    <div className="lg:hidden flex items-center justify-between gap-3 bg-white p-4 rounded-xl border border-stone-200 shadow-xs">
+                        <button
+                            type="button"
+                            onClick={() => setShowMobileFilters(!showMobileFilters)}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-stone-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                        >
+                            <span>{showMobileFilters ? '✕ Close Filters' : '⚡ Filter Products'}</span>
+                        </button>
+                        {(safeFilters.category || safeFilters.search || safeFilters.in_stock || safeFilters.min_price || safeFilters.max_price) && (
+                            <button
+                                type="button"
+                                onClick={clearAllFilters}
+                                className="text-xs text-rose-800 hover:underline font-semibold cursor-pointer"
+                            >
+                                {t('clear_filters', 'Clear All')}
+                            </button>
+                        )}
+                    </div>
+
                     {/* Filters Sidebar */}
-                    <aside className="w-full lg:w-64 shrink-0 space-y-6">
+                    <aside className={`w-full lg:w-64 shrink-0 space-y-6 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
                         {/* Search Bar */}
                         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
                             <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-900 mb-3">

@@ -149,7 +149,8 @@ export default function CourierIndex({ couriers }: Props) {
 
                 {/* Couriers List Table */}
                 <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-                    <table className="w-full text-left text-xs divide-y divide-stone-200">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs divide-y divide-stone-200">
                         <thead className="bg-stone-50 text-stone-600 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
                                 <th className="px-6 py-3">Courier Name</th>
@@ -207,6 +208,7 @@ export default function CourierIndex({ couriers }: Props) {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </AdminLayout>

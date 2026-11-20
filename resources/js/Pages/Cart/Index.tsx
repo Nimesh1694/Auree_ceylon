@@ -151,7 +151,8 @@ export default function CartIndex({ cart }: Props) {
                                                                 item.quantity - 1
                                                             )
                                                         }
-                                                        className="px-2.5 py-1.5 text-stone-600 hover:text-stone-900 cursor-pointer"
+                                                        className="w-9 h-9 flex items-center justify-center text-stone-600 hover:text-stone-900 cursor-pointer"
+                                                        aria-label="Decrease quantity"
                                                     >
                                                         −
                                                     </button>
@@ -167,7 +168,8 @@ export default function CartIndex({ cart }: Props) {
                                                                 item.quantity + 1
                                                             )
                                                         }
-                                                        className="px-2.5 py-1.5 text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
+                                                        className="w-9 h-9 flex items-center justify-center text-stone-600 hover:text-stone-900 disabled:opacity-30 cursor-pointer"
+                                                        aria-label="Increase quantity"
                                                     >
                                                         +
                                                     </button>
@@ -182,7 +184,7 @@ export default function CartIndex({ cart }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemove(item.product_id)}
-                                                    className="text-stone-400 hover:text-rose-700 text-sm p-1 cursor-pointer transition-colors"
+                                                    className="min-h-[44px] min-w-[44px] flex items-center justify-center text-stone-400 hover:text-rose-700 text-base p-1 cursor-pointer transition-colors"
                                                     aria-label="Remove item"
                                                 >
                                                     ✕

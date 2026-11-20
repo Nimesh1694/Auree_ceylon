@@ -388,7 +388,7 @@ export default function AddressBookIndex({
 
                         <form onSubmit={handleFormSubmit} className="mt-6 space-y-4">
                             {/* Label & Default Checkbox */}
-                            <div className="grid grid-cols-2 gap-3 items-center">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                                 <div>
                                     <label className="text-xs font-semibold text-stone-800 block mb-1">
                                         Label <span className="text-stone-400 font-normal">(e.g. Home, Office)</span>
@@ -398,12 +398,12 @@ export default function AddressBookIndex({
                                         value={data.label}
                                         onChange={(e) => setData('label', e.target.value)}
                                         placeholder="Home"
-                                        className="w-full text-xs rounded-xl border-stone-300 focus:border-stone-900 focus:ring-stone-900 py-2"
+                                        className="w-full text-xs rounded-xl border-stone-300 focus:border-stone-900 focus:ring-stone-900 py-2.5"
                                     />
                                     {errors.label && <p className="text-xs text-rose-600 mt-1">{errors.label}</p>}
                                 </div>
 
-                                <div className="pt-5">
+                                <div className="pt-1 sm:pt-5">
                                     <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-stone-800">
                                         <input
                                             type="checkbox"

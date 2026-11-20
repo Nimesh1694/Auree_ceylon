@@ -77,8 +77,8 @@ export default function PublicLayout({ children }: PropsWithChildren) {
 
                     {/* Right Utilities: Language Switcher, Cart, Auth */}
                     <div className="flex items-center space-x-4">
-                        {/* Language Switcher */}
-                        <div className="inline-flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-xs font-medium">
+                        {/* Language Switcher (Visible on tablet & desktop; on mobile available inside drawer) */}
+                        <div className="hidden sm:inline-flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-xs font-medium shrink-0">
                             <button
                                 type="button"
                                 onClick={() => switchLocale('en')}
@@ -106,14 +106,14 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         {/* Cart Button */}
                         <Link
                             href="/cart"
-                            className="relative p-2 text-stone-700 hover:text-rose-800 transition-colors"
+                            className="relative p-2 text-stone-700 hover:text-rose-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                             aria-label="Shopping Cart"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-rose-700 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                <span className="absolute top-1 right-1 bg-rose-700 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                                     {cartCount}
                                 </span>
                             )}
@@ -138,7 +138,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                     href="/logout"
                                     method="post"
                                     as="button"
-                                    className="text-xs text-stone-600 hover:text-stone-900 underline"
+                                    className="hidden sm:inline-block text-xs text-stone-600 hover:text-stone-900 underline"
                                 >
                                     {t('logout', 'Logout')}
                                 </Link>
@@ -164,7 +164,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 text-stone-700 hover:text-stone-900"
+                            className="md:hidden p-2 text-stone-700 hover:text-stone-900 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                             aria-label="Toggle menu"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,12 +196,12 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                         <Link href="/track" className="block py-2 text-stone-800 font-medium">
                             {t('track_order', 'Track Order')}
                         </Link>
-                        <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
-                            <div className="inline-flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-xs font-medium">
+                        <div className="pt-3 border-t border-stone-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div className="inline-flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-xs font-medium self-start sm:self-auto">
                                 <button
                                     type="button"
                                     onClick={() => switchLocale('en')}
-                                    className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                                    className={`px-3 py-1.5 rounded-full transition-all cursor-pointer min-h-[36px] flex items-center ${
                                         locale === 'en'
                                             ? 'bg-stone-900 text-white shadow-xs'
                                             : 'text-stone-600 hover:text-stone-900'
@@ -212,7 +212,7 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 <button
                                     type="button"
                                     onClick={() => switchLocale('si')}
-                                    className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                                    className={`px-3 py-1.5 rounded-full transition-all cursor-pointer min-h-[36px] flex items-center ${
                                         locale === 'si'
                                             ? 'bg-stone-900 text-white shadow-xs'
                                             : 'text-stone-600 hover:text-stone-900'
@@ -222,23 +222,37 @@ export default function PublicLayout({ children }: PropsWithChildren) {
                                 </button>
                             </div>
                             {!auth.user ? (
-                                <>
-                                    <Link href="/login" className="text-sm font-medium text-stone-700">
+                                <div className="flex items-center gap-2 pt-2 sm:pt-0">
+                                    <Link href="/login" className="flex-1 text-center text-xs font-semibold uppercase tracking-wider text-stone-700 py-2.5 px-3 rounded-lg hover:bg-stone-100 border border-stone-200 min-h-[44px] flex items-center justify-center">
                                         {t('login', 'Login')}
                                     </Link>
-                                    <Link href="/register" className="text-sm font-medium text-rose-800">
+                                    <Link href="/register" className="flex-1 text-center text-xs font-semibold uppercase tracking-wider text-white bg-stone-900 py-2.5 px-3 rounded-lg hover:bg-stone-800 shadow-2xs min-h-[44px] flex items-center justify-center">
                                         {t('register', 'Register')}
                                     </Link>
-                                </>
+                                </div>
                             ) : (
-                                <Link
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                    className="text-sm font-medium text-rose-800"
-                                >
-                                    {t('logout', 'Logout')}
-                                </Link>
+                                <div className="flex items-center justify-between gap-3 pt-2 sm:pt-0">
+                                    <Link
+                                        href={
+                                            auth.user.role === 'customer'
+                                                ? '/dashboard'
+                                                : auth.user.role.includes('agent')
+                                                ? '/agent/dashboard'
+                                                : '/admin/dashboard'
+                                        }
+                                        className="text-xs font-semibold text-stone-900 py-2 px-3 rounded-lg border border-stone-300 hover:bg-stone-100 min-h-[44px] flex items-center"
+                                    >
+                                        My Portal ({auth.user.name.split(' ')[0]})
+                                    </Link>
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        className="text-xs font-medium text-rose-700 hover:text-rose-900 underline min-h-[44px] flex items-center cursor-pointer"
+                                    >
+                                        {t('logout', 'Logout')}
+                                    </Link>
+                                </div>
                             )}
                         </div>
                     </div>

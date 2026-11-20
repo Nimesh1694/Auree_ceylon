@@ -58,7 +58,7 @@ export default function OrderIndex({ orders, filters }: Props) {
                         placeholder="Search order #, customer, phone..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs px-3 py-1.5 w-60 focus:border-blue-500 focus:ring-blue-500"
+                        className="rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs px-3 py-1.5 w-full sm:w-60 focus:border-blue-500 focus:ring-blue-500"
                     />
 
                     <select
@@ -107,7 +107,8 @@ export default function OrderIndex({ orders, filters }: Props) {
 
                 {/* Orders Table */}
                 <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs overflow-hidden">
-                    <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
                         <thead className="bg-slate-50 dark:bg-[#1E293B]/70 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
                                 <th className="px-6 py-3.5">Order Number</th>
@@ -205,6 +206,7 @@ export default function OrderIndex({ orders, filters }: Props) {
                             )}
                         </tbody>
                     </table>
+                    </div>
 
                     {/* Pagination */}
                     {orders.last_page > 1 && (

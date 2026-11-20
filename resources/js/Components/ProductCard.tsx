@@ -128,14 +128,14 @@ export default function ProductCard({ product }: Props) {
                         <button
                             type="button"
                             onClick={handleQuickAdd}
-                            className="text-xs uppercase tracking-wider font-semibold px-3.5 py-1.5 bg-stone-900 hover:bg-rose-900 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
+                            className="text-xs uppercase tracking-wider font-semibold px-4 py-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-stone-900 hover:bg-rose-900 text-white rounded-lg transition-colors shadow-xs cursor-pointer"
                         >
                             {t('add_to_cart', 'Add')}
                         </button>
                     ) : (
                         <Link
                             href={`/products/${product.slug}`}
-                            className="text-xs uppercase tracking-wider font-semibold px-3 py-1.5 bg-stone-200 text-stone-500 rounded-lg cursor-not-allowed"
+                            className="text-xs uppercase tracking-wider font-semibold px-3 py-2 min-h-[44px] inline-flex items-center justify-center bg-stone-200 text-stone-500 rounded-lg cursor-not-allowed"
                         >
                             {t('out_of_stock', 'Out of Stock')}
                         </Link>

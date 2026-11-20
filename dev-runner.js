@@ -19,8 +19,8 @@ if (process.platform === 'win32') {
 
 console.log('\x1b[36m%s\x1b[0m', '✨ Starting Aura Luxe Development Environment...');
 
-// 3. Start Laravel Backend Server on port 8000
-const phpProcess = spawn(phpBin, ['artisan', 'serve', '--host=127.0.0.1', '--port=8000'], {
+// 3. Start Laravel Backend Server on port 8000 listening on all interfaces
+const phpProcess = spawn(phpBin, ['artisan', 'serve', '--host=0.0.0.0', '--port=8000'], {
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
 });
@@ -28,7 +28,8 @@ const phpProcess = spawn(phpBin, ['artisan', 'serve', '--host=127.0.0.1', '--por
 phpProcess.stdout.on('data', (data) => {
     const str = data.toString();
     if (str.includes('Server running on')) {
-        console.log('\x1b[32m%s\x1b[0m', '➜  Application URL:   http://127.0.0.1:8000');
+        console.log('\x1b[32m%s\x1b[0m', '➜  Local App:    http://127.0.0.1:8000');
+        console.log('\x1b[32m%s\x1b[0m', '➜  Network App:  http://10.139.249.124:8000');
     } else if (!str.includes('Press Ctrl+C') && str.trim()) {
         process.stdout.write(`\x1b[34m[laravel]\x1b[0m ${str}`);
     }

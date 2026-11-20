@@ -87,12 +87,12 @@ export default function AgentDashboard({ agent, stats, recentOrders, achievement
                                 type="text"
                                 readOnly
                                 value={referralLink}
-                                className="flex-1 bg-white border border-stone-200 rounded-lg text-xs font-mono px-3 py-1.5 text-stone-700 select-all"
+                                className="flex-1 min-w-0 bg-white border border-stone-200 rounded-lg text-xs font-mono px-3 py-2 text-stone-700 select-all"
                             />
                             <button
                                 type="button"
                                 onClick={handleCopy}
-                                className="bg-stone-900 hover:bg-stone-800 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap"
+                                className="min-h-[44px] bg-stone-900 hover:bg-stone-800 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors whitespace-nowrap cursor-pointer shrink-0"
                             >
                                 {copied ? '✓ Copied' : 'Copy Link'}
                             </button>
@@ -101,7 +101,7 @@ export default function AgentDashboard({ agent, stats, recentOrders, achievement
                 </div>
 
                 {/* Performance Metrics Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* 1. Own Placed Orders */}
                     <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
                         <span className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold block">

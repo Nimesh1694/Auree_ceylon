@@ -549,7 +549,7 @@ export default function AdminDashboard({
                     SECTION D: 8 FINANCIAL SUMMARY & RECONCILIATION CARDS
                    ========================================================================= */}
                 <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div>
                             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
                                 Financial Reconciliation & Ledger
@@ -558,7 +558,7 @@ export default function AdminDashboard({
                                 Strict ledger reconciliation between cash collected, commission reserves, and payouts.
                             </p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <Link href="/admin/finance/contribution" className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline">
                                 Operating Contribution Statement &rarr;
                             </Link>
@@ -568,7 +568,7 @@ export default function AdminDashboard({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* 1. Gross Sales */}
                         <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs">
                             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">

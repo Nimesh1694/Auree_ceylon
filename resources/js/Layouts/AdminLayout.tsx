@@ -664,12 +664,12 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                         <Link
                             href="/"
                             target="_blank"
-                            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 rounded-xl shadow-xs shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 rounded-xl shadow-xs shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all cursor-pointer min-h-[38px] shrink-0"
                             title="Visit Public Storefront"
                         >
                             <Icons.ShoppingCart className="w-3.5 h-3.5 text-white" />
-                            <span>Storefront</span>
-                            <Icons.ExternalLink className="w-3 h-3 text-blue-100" />
+                            <span className="hidden sm:inline">Storefront</span>
+                            <Icons.ExternalLink className="hidden sm:inline w-3 h-3 text-blue-100" />
                         </Link>
 
                         {/* Theme Switcher Toggle (Light / Dark Mode) */}
@@ -745,7 +745,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
 
                             {/* Dropdown Card */}
                             {userMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1E293B] rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 py-1.5 z-50 text-xs transition-colors">
+                                <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#1E293B] rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 py-1.5 z-50 text-xs transition-colors">
                                     <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/60">
                                         <div className="font-semibold text-slate-900 dark:text-white">{user?.name}</div>
                                         <div className="text-slate-500 dark:text-slate-400 text-[11px] truncate">{user?.email}</div>

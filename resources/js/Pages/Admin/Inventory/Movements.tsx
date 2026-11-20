@@ -86,7 +86,8 @@ export default function InventoryMovements({ movements, products, filters }: Pro
 
                 {/* Movements Ledger Table */}
                 <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs overflow-hidden">
-                    <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs divide-y divide-slate-200 dark:divide-slate-800">
                         <thead className="bg-slate-50 dark:bg-[#1E293B]/70 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                             <tr>
                                 <th className="px-6 py-3.5">Timestamp</th>
@@ -148,6 +149,7 @@ export default function InventoryMovements({ movements, products, filters }: Pro
                             )}
                         </tbody>
                     </table>
+                    </div>
 
                     {/* Pagination */}
                     {movements.last_page > 1 && (
