@@ -331,24 +331,42 @@ export default function ProductEdit({ product, categories, canViewCostPrice }: P
 
                 {/* Product Images Management Gallery */}
                 <div className="bg-white dark:bg-[#0F172A] p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
                         <div>
-                            <h2 className="font-serif text-base font-semibold text-slate-900 dark:text-white">Product Images Gallery</h2>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Upload multiple photos, appoint the primary hero image, or delete outdated images.</p>
+                            <div className="flex items-center space-x-2">
+                                <h2 className="font-serif text-base font-semibold text-slate-900 dark:text-white">Product Images Gallery</h2>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                    (product.images?.length ?? 0) >= 6
+                                        ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                }`}>
+                                    {product.images?.length ?? 0} / 6 Images
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Upload up to 6 photos (or below 6), appoint the primary hero image, or delete outdated images.
+                            </p>
                         </div>
-                        <label className="bg-slate-900 dark:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-slate-800 dark:hover:bg-blue-500 transition-colors">
-                            {uploadingImage ? 'Uploading...' : '+ Upload New Image'}
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                onChange={handleUploadImage}
-                                disabled={uploadingImage}
-                                className="hidden"
-                            />
-                        </label>
+
+                        {(product.images?.length ?? 0) >= 6 ? (
+                            <span className="text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
+                                Maximum 6 images reached
+                            </span>
+                        ) : (
+                            <label className="bg-slate-900 dark:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-slate-800 dark:hover:bg-blue-500 transition-colors inline-flex items-center justify-center">
+                                {uploadingImage ? 'Uploading...' : `+ Upload Image (${product.images?.length ?? 0}/6)`}
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handleUploadImage}
+                                    disabled={uploadingImage}
+                                    className="hidden"
+                                />
+                            </label>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                         {product.images && product.images.length > 0 ? (
                             product.images.map((img) => (
                                 <div key={img.id} className="relative rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden group bg-slate-50 dark:bg-slate-800">

@@ -195,6 +195,12 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                     show: hasPermission('categories.manage'),
                 },
                 {
+                    label: 'Storefront Banners',
+                    href: '/admin/banners',
+                    icon: Icons.Sparkles,
+                    show: isOwner || isSuperAdmin || user?.role === 'marketing_manager' || hasPermission('categories.manage'),
+                },
+                {
                     label: 'Coupons & Discounts',
                     href: '/admin/coupons',
                     icon: Icons.Layers,
@@ -434,6 +440,12 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                     href: '/admin/categories',
                     icon: Icons.Layers,
                     show: hasPermission('categories.manage'),
+                },
+                {
+                    label: 'Storefront Banners',
+                    href: '/admin/banners',
+                    icon: Icons.Sparkles,
+                    show: isOwner || isSuperAdmin || user?.role === 'marketing_manager' || hasPermission('categories.manage'),
                 },
                 {
                     label: 'Coupons & Discounts',

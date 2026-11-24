@@ -65,6 +65,30 @@ class HandleInertiaRequests extends Middleware
             ],
             'referralCode' => fn () => $request->session()->get('referral_code'),
             'cartCount' => fn () => count($request->session()->get('cart', [])),
+            'cartDetails' => fn () => app(\App\Services\CartService::class)->getDetails(),
+            'upsellProducts' => fn () => \App\Models\Product::with('category', 'primaryImage')
+                ->where('is_active', true)
+                ->where('stock_quantity', '>', 0)
+                ->orderByDesc('is_featured')
+                ->orderByDesc('id')
+                ->limit(6)
+                ->get()
+                ->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'name' => $p->name_en,
+                        'slug' => $p->slug,
+                        'price' => (float) $p->price,
+                        'image' => $p->primaryImage?->path,
+                        'category' => $p->category?->name_en ?? 'Ceylon Botanical',
+                        'badge' => $p->is_featured ? 'Bestseller' : 'Ritual Pair',
+                    ];
+                }),
+            'whatsapp' => [
+                'number' => (string) \App\Models\Setting::get('whatsapp_number', env('VITE_WHATSAPP_NUMBER', '94772345678')),
+                'message' => (string) \App\Models\Setting::get('whatsapp_message', 'Hello Aura Luxe, I would like to inquire about your products.'),
+                'is_enabled' => (bool) \App\Models\Setting::get('whatsapp_enabled', true),
+            ],
         ];
     }
 }

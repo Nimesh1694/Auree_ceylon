@@ -164,5 +164,58 @@ class ProductManagementTest extends TestCase
         $this->assertDatabaseCount('product_images', 1);
         $this->assertTrue((bool) $firstImage->fresh()->is_primary); // Promoted to primary!
     }
+
+    public function test_product_allows_maximum_6_images(): void
+    {
+        // 1. Creating product with 6 images succeeds
+        $images = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $images[] = UploadedFile::fake()->image("image{$i}.jpg", 600, 600);
+        }
+
+        $response = $this->actingAs($this->owner)->post('/admin/products', [
+            'category_id' => $this->category->id,
+            'name_en' => 'Six Image Product',
+            'name_si' => 'හය පින්තූර භාණ්ඩය',
+            'price' => 2500.00,
+            'stock_quantity' => 15,
+            'low_stock_threshold' => 3,
+            'is_active' => true,
+            'images' => $images,
+        ]);
+
+        $response->assertRedirect('/admin/products');
+        $product = Product::where('slug', 'six-image-product')->first();
+        $this->assertNotNull($product);
+        $this->assertCount(6, $product->images);
+
+        // 2. Attempting to upload a 7th image to this product is rejected
+        $extraImage = UploadedFile::fake()->image('image7.jpg');
+        $uploadResponse = $this->actingAs($this->owner)->post("/admin/products/{$product->id}/images", [
+            'image' => $extraImage,
+        ]);
+
+        $uploadResponse->assertSessionHasErrors(['image']);
+        $this->assertCount(6, $product->fresh()->images);
+
+        // 3. Attempting to create product with 7 images fails validation
+        $sevenImages = [];
+        for ($i = 1; $i <= 7; $i++) {
+            $sevenImages[] = UploadedFile::fake()->image("img{$i}.jpg", 600, 600);
+        }
+
+        $failResponse = $this->actingAs($this->owner)->post('/admin/products', [
+            'category_id' => $this->category->id,
+            'name_en' => 'Seven Image Product',
+            'name_si' => 'හත පින්තූර භාණ්ඩය',
+            'price' => 2500.00,
+            'stock_quantity' => 10,
+            'low_stock_threshold' => 2,
+            'is_active' => true,
+            'images' => $sevenImages,
+        ]);
+
+        $failResponse->assertSessionHasErrors(['images']);
+    }
 }
 

@@ -107,7 +107,11 @@ class ProductController extends Controller
             'is_featured' => 'boolean',
             'is_best_seller' => 'boolean',
             'is_new_arrival' => 'boolean',
+            'images' => 'nullable|array|max:6',
             'images.*' => 'nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
+        ], [
+            'images.max' => 'You cannot upload more than 6 images per product.',
+            'images.*.max' => 'Each image must not exceed 2MB in size.',
         ]);
 
         if (empty($validated['slug'])) {
@@ -241,6 +245,10 @@ class ProductController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,webp,jpg|max:2048',
         ]);
+
+        if ($product->images()->count() >= 6) {
+            return back()->withErrors(['image' => 'A maximum of 6 images is allowed per product. Please delete an existing image first.']);
+        }
 
         $path = $request->file('image')->store('products', 'public');
         $hasExisting = $product->images()->exists();

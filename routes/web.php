@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AgentController as AdminAgentController;
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AgentAchievementAwardController as AdminAgentAchievementAwardController;
 use App\Http\Controllers\Admin\AgentAchievementRequestController as AdminAgentAchievementRequestController;
 use App\Http\Controllers\Admin\AgentAnalyticsController as AdminAgentAnalyticsController;
@@ -90,9 +91,9 @@ Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('cat
 // Shopping Cart
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-Route::patch('/cart/update', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
-Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::match(['patch', 'post'], '/cart/update', [CartController::class, 'update'])->name('cart.update');
+Route::match(['delete', 'post'], '/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
+Route::match(['delete', 'post'], '/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Cash on Delivery (COD) Checkout (Rate Limited & Active Account Enforced)
 Route::middleware('customer.active')->group(function () {
@@ -102,6 +103,9 @@ Route::middleware('customer.active')->group(function () {
     Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove_coupon');
 });
 Route::get('/orders/{orderNumber}/confirmation', [CheckoutController::class, 'confirmation'])->name('order.confirmation');
+Route::get('/orders/{orderNumber}/receipt', [CheckoutController::class, 'downloadReceipt'])->name('order.receipt');
+Route::get('/orders/{orderNumber}/receipt/show', [CheckoutController::class, 'showReceipt'])->name('order.receipt.show');
+Route::get('/orders/{orderNumber}/receipt/print', [CheckoutController::class, 'printReceipt'])->name('order.receipt.print');
 
 // Secure Order Tracking (Rate Limited)
 Route::get('/track', [TrackingController::class, 'index'])->name('tracking.index');
@@ -277,6 +281,17 @@ Route::middleware(['auth', 'role:management', 'two_factor'])->prefix('admin')->n
         Route::post('/products/{product}/images', [AdminProductController::class, 'uploadImage'])->name('products.images.upload');
         Route::patch('/products/{product}/images/{image}/primary', [AdminProductController::class, 'setPrimaryImage'])->name('products.images.primary');
         Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'deleteImage'])->name('products.images.delete');
+    });
+
+    // Storefront Banner Management (Owner, IT Manager, Super Admin, Marketing Manager)
+    Route::middleware('role:owner,it_manager,super_admin,marketing_manager')->group(function () {
+        Route::get('/banners', [AdminBannerController::class, 'index'])->name('banners.index');
+        Route::post('/banners', [AdminBannerController::class, 'store'])->name('banners.store');
+        Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
+        Route::patch('/banners/{banner}/toggle', [AdminBannerController::class, 'toggle'])->name('banners.toggle');
+        Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+        Route::post('/banners/experience', [AdminBannerController::class, 'updateExperience'])->name('banners.experience.update');
+        Route::post('/banners/whatsapp', [AdminBannerController::class, 'updateWhatsApp'])->name('banners.whatsapp.update');
     });
 
     // Marketing & Coupon Management

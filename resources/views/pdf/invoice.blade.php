@@ -303,11 +303,11 @@
                 </div>
                 <div>
                     @if($meta['is_paid'])
-                        <span class="badge badge-paid">&#10003; {{ $meta['status_badge'] }}</span>
+                        <span class="badge badge-paid">{{ $meta['status_badge'] }}</span>
                     @elseif(in_array($order['status'], ['cancelled', 'returned', 'refused']))
-                        <span class="badge badge-void">&#10007; {{ $meta['status_badge'] }}</span>
+                        <span class="badge badge-void">{{ $meta['status_badge'] }}</span>
                     @else
-                        <span class="badge badge-pending">&#9679; {{ $meta['status_badge'] }}</span>
+                        <span class="badge badge-pending">{{ $meta['status_badge'] }}</span>
                     @endif
                 </div>
                 <div style="margin-top: 8px; font-size: 9.5px; color: #64748b;">
@@ -422,7 +422,7 @@
     <!-- Payment & Settlement Notice -->
     @if($meta['is_paid'])
         <div class="payment-box payment-box-paid">
-            <div class="payment-box-title">&#10003; Payment Settlement Confirmation</div>
+            <div class="payment-box-title">Payment Settlement Confirmation</div>
             <div>
                 Payment has been verified and settled in full via Cash on Delivery (COD).
                 @if(!empty($payment['courier_name']))
@@ -435,14 +435,14 @@
         </div>
     @elseif(in_array($order['status'], ['cancelled', 'returned', 'refused']))
         <div class="payment-box payment-box-void">
-            <div class="payment-box-title">&#10007; Order Terminated &mdash; Document Void</div>
+            <div class="payment-box-title">Order Terminated &mdash; Document Void</div>
             <div>
                 This order was {{ strtoupper($order['status']) }}. No payment is due or collected for this order reference. This document is retained for accounting and audit records only.
             </div>
         </div>
     @else
         <div class="payment-box payment-box-pending">
-            <div class="payment-box-title">&#9679; Payment Terms &mdash; Cash on Delivery</div>
+            <div class="payment-box-title">Payment Terms &mdash; Cash on Delivery</div>
             <div>
                 Total amount payable is <strong>{{ $order['total_amount_formatted'] }}</strong> in cash upon physical package delivery by our authorized courier partner. Please inspect package seals prior to payment.
             </div>
@@ -456,7 +456,7 @@
             This is a computer-generated commercial document. For inquiries or customer support, please contact support@auraluxe.lk or call +94 11 234 5678.
         </div>
         <div style="margin-top: 3px; font-size: 7.5px; color: #cbd5e1;">
-            Generated: {{ $generated_at }} &bull; Aura Luxe (Pvt) Ltd. All Rights Reserved.
+            Generated: {{ $generated_at }} | Aura Luxe (Pvt) Ltd. All Rights Reserved.
         </div>
     </div>
 

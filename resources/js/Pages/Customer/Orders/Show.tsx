@@ -181,7 +181,7 @@ export default function CustomerOrderShow({ order }: Props) {
                             </a>
 
                             <Link
-                                href={`/track?order_number=${order.order_number}`}
+                                href="/track"
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-stone-700 bg-white border border-stone-200 hover:bg-stone-50 transition-colors shadow-2xs"
                             >
                                 <Icons.Truck className="w-3.5 h-3.5 text-stone-500" />

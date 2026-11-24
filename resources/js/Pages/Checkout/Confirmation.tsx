@@ -104,6 +104,49 @@ export default function CheckoutConfirmation({ order }: Props) {
                             </span>
                         </div>
                     </div>
+
+                    {/* Official Order Receipt Download & Print Card */}
+                    <div className="mt-8 pt-6 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 bg-stone-50/80 rounded-2xl p-5 border border-stone-200/60 text-left">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-11 h-11 rounded-2xl bg-amber-100/90 text-amber-900 border border-amber-300/60 flex items-center justify-center shrink-0 text-xl shadow-xs">
+                                📄
+                            </div>
+                            <div>
+                                <span className="font-serif font-semibold text-stone-900 text-sm block">
+                                    Official Order Receipt & Invoice
+                                </span>
+                                <span className="text-xs text-stone-500 block mt-0.5 leading-relaxed">
+                                    Download your official Aura Luxe PDF receipt for cash on delivery verification & records.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                            <a
+                                href={`/orders/${order.order_number}/receipt?token=${order.tracking_token}`}
+                                download
+                                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-900 hover:bg-rose-800 text-white text-xs font-semibold rounded-xl shadow-sm transition-all active:scale-98 cursor-pointer min-h-[42px]"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                <span>Download PDF Receipt</span>
+                            </a>
+                            <a
+                                href={`/orders/${order.order_number}/receipt/show?token=${order.tracking_token}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 border border-stone-300 hover:bg-white text-stone-700 hover:text-stone-900 text-xs font-semibold rounded-xl transition-all shadow-2xs cursor-pointer min-h-[42px]"
+                                title="Show and view receipt in new tab"
+                            >
+                                <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <span>Show Receipt</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Details Breakdown */}
@@ -184,7 +227,7 @@ export default function CheckoutConfirmation({ order }: Props) {
                 {/* Actions */}
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                     <Link
-                        href={`/track?order_number=${order.order_number}&phone=${order.customer_phone}`}
+                        href="/track"
                         className="px-6 py-3.5 bg-stone-900 hover:bg-rose-900 text-white text-xs uppercase tracking-[0.2em] font-semibold rounded-xl shadow-md transition-colors"
                     >
                         {t('track_your_order', 'Track Order Status')}

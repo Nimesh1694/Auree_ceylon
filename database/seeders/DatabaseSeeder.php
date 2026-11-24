@@ -256,7 +256,31 @@ class DatabaseSeeder extends Seeder
             'low_stock_threshold' => 15,
             'is_active' => true,
             'is_featured' => false,
-            'is_best_seller' => false,
+            'is_best_seller' => true,
+            'is_new_arrival' => true,
+        ]);
+
+        $p4 = Product::firstOrCreate(['slug' => 'saffron-royal-lotus-night-elixir'], [
+            'category_id' => $serums->id,
+            'name_en' => 'Saffron & Royal Lotus Rejuvenating Night Elixir',
+            'name_si' => 'කුංකුම සහ නෙළුම් රාත්‍රී පුනර්ජීවන එලික්සර් 30ml',
+            'sku' => 'AL-SER-004',
+            'short_description_en' => 'Overnight cellular restoration with pure Kashmiri saffron and Ceylon sacred lotus extract.',
+            'short_description_si' => 'රාත්‍රී කාලයේ සමේ සෛල ප්‍රතිජනනය කරන පිරිසිදු කුංකුම සහ නෙළුම් සාරය.',
+            'description_en' => 'An opulent, dual-action nighttime elixir crafted with hand-harvested royal saffron, organic blue water lily, and multi-molecular hyaluronic acid.',
+            'description_si' => 'රාත්‍රී කාලයේ සමේ සෛල ප්‍රතිජනනය කරමින් උදෑසන නැවුම්, දීප්තිමත් සමක් ලබාදෙන අගනා එලික්සර් ආලේපනය.',
+            'ingredients_en' => 'Aqua, Crocus Sativus (Saffron) Stigma Extract, Nymphaea Caerulea Flower Water, Sodium Hyaluronate, Bakuchiol.',
+            'ingredients_si' => 'ජලය, කුංකුම සාරය, නෙළුම් මල් සාරය, හයලුරොනේට්, බකුචියෝල්.',
+            'directions_en' => 'Warm 3-4 drops between fingertips and gently press into freshly cleansed face and neck before bedtime.',
+            'directions_si' => 'රාත්‍රියේ නින්දට පෙර පිරිසිදු කරගත් මුහුණේ සහ බෙල්ලේ බිංදු 3-4 ක් ආලේප කරන්න.',
+            'price' => 5200.00,
+            'compare_at_price' => 5900.00,
+            'cost_price' => 2400.00,
+            'stock_quantity' => 110,
+            'low_stock_threshold' => 12,
+            'is_active' => true,
+            'is_featured' => true,
+            'is_best_seller' => true,
             'is_new_arrival' => true,
         ]);
     }

@@ -195,11 +195,10 @@ export default function CustomerOrdersIndex({ orders, filters, customer }: Props
                                         key={tab.key}
                                         type="button"
                                         onClick={() => handleStatusFilter(tab.key)}
-                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
-                                            isActive
-                                                ? 'bg-stone-900 text-white shadow-xs font-semibold'
-                                                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                                        }`}
+                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer ${isActive
+                                            ? 'bg-stone-900 text-white shadow-xs font-semibold'
+                                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                                            }`}
                                     >
                                         {tab.label}
                                     </button>
@@ -430,11 +429,10 @@ export default function CustomerOrdersIndex({ orders, filters, customer }: Props
                                                         key={idx}
                                                         href={link.url}
                                                         preserveState
-                                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                                                            link.active
-                                                                ? 'bg-stone-900 text-white font-semibold'
-                                                                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
-                                                        }`}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${link.active
+                                                            ? 'bg-stone-900 text-white font-semibold'
+                                                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                                                            }`}
                                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                                     />
                                                 );

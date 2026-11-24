@@ -93,7 +93,7 @@ class ProductController extends Controller
      */
     public function show(string $slug): Response
     {
-        $product = Product::with(['category', 'images'])
+        $product = Product::with(['category', 'images', 'approvedReviews.customer:id,name'])
             ->where('is_active', true)
             ->where('slug', $slug)
             ->firstOrFail();

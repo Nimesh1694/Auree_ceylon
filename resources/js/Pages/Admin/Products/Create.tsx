@@ -1,7 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Category } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Props {
     categories: Category[];
@@ -42,10 +42,24 @@ export default function ProductCreate({ categories }: Props) {
         });
     };
 
+    const [imageLimitWarning, setImageLimitWarning] = useState<string | null>(null);
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setData('images', Array.from(e.target.files));
+            const files = Array.from(e.target.files);
+            if (files.length > 6) {
+                setImageLimitWarning('Maximum 6 images allowed. Only the first 6 selected images will be uploaded.');
+                setData('images', files.slice(0, 6));
+            } else {
+                setImageLimitWarning(null);
+                setData('images', files);
+            }
         }
+    };
+
+    const handleRemoveSelectedImage = (indexToRemove: number) => {
+        setData('images', data.images.filter((_, idx) => idx !== indexToRemove));
+        setImageLimitWarning(null);
     };
 
     return (
@@ -267,9 +281,16 @@ export default function ProductCreate({ categories }: Props) {
 
                     {/* Images */}
                     <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                        <h2 className="font-semibold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800/80 pb-2">4. Product Images</h2>
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">4. Product Images</h2>
+                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                {data.images.length} / 6 images selected (Maximum 6)
+                            </span>
+                        </div>
                         <div>
-                            <label className="block font-medium text-slate-700 dark:text-slate-300">Upload Product Images (JPEG, PNG, WebP &le; 2MB)</label>
+                            <label className="block font-medium text-slate-700 dark:text-slate-300">
+                                Upload Product Images (Maximum 6 images, or below 6. JPEG, PNG, WebP &le; 2MB)
+                            </label>
                             <input
                                 type="file"
                                 multiple
@@ -277,8 +298,45 @@ export default function ProductCreate({ categories }: Props) {
                                 onChange={handleImageChange}
                                 className="mt-2 block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-800 dark:file:text-slate-200 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 cursor-pointer"
                             />
+                            {imageLimitWarning && (
+                                <p className="text-amber-600 dark:text-amber-400 text-[11px] mt-1.5 font-medium">{imageLimitWarning}</p>
+                            )}
+                            {(errors as any).images && (
+                                <p className="text-rose-600 dark:text-rose-400 text-[11px] mt-1 font-medium">{(errors as any).images}</p>
+                            )}
                             {errors['images.*' as keyof typeof errors] && (
                                 <p className="text-rose-600 dark:text-rose-400 text-[11px] mt-1">{errors['images.*' as keyof typeof errors]}</p>
+                            )}
+
+                            {/* Image Previews */}
+                            {data.images.length > 0 && (
+                                <div className="mt-3 grid grid-cols-2 sm:grid-cols-6 gap-3">
+                                    {data.images.map((file, idx) => (
+                                        <div key={idx} className="relative aspect-square rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800 group">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`Preview ${idx + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {idx === 0 && (
+                                                <span className="absolute top-1 left-1 bg-stone-900 text-white text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded">
+                                                    Primary
+                                                </span>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveSelectedImage(idx)}
+                                                className="absolute top-1 right-1 w-5 h-5 bg-rose-600 text-white rounded-full flex items-center justify-center text-xs opacity-90 hover:opacity-100 cursor-pointer"
+                                                title="Remove this image"
+                                            >
+                                                ✕
+                                            </button>
+                                            <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] px-1 rounded">
+                                                #{idx + 1}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>

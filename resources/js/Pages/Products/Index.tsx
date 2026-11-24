@@ -35,28 +35,52 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
     const safeFilters: FiltersState = (filters && !Array.isArray(filters) ? filters : {}) as FiltersState;
 
     const [search, setSearch] = useState(typeof safeFilters.search === 'string' ? safeFilters.search : '');
-    const [minPrice, setMinPrice] = useState(typeof safeFilters.min_price === 'string' ? safeFilters.min_price : '');
-    const [maxPrice, setMaxPrice] = useState(typeof safeFilters.max_price === 'string' ? safeFilters.max_price : '');
-    const [inStock, setInStock] = useState(safeFilters.in_stock ? true : false);
+    const [inStock, setInStock] = useState(Boolean(safeFilters.in_stock));
     const [selectedSort, setSelectedSort] = useState(
         typeof safeFilters.sort === 'string' ? safeFilters.sort : 'newest'
     );
-    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-    const handleFilterSubmit = (e?: React.FormEvent) => {
+    const activeCategory = categories.find((c) => c.slug === safeFilters.category);
+
+    const handleCategorySelect = (categorySlug?: string) => {
+        router.get(
+            '/products',
+            {
+                category: categorySlug || undefined,
+                search: search || undefined,
+                in_stock: inStock ? '1' : undefined,
+                sort: selectedSort !== 'newest' ? selectedSort : undefined,
+            },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const handleFilterSelect = (filterName: string) => {
+        const isAlreadySelected = safeFilters.filter === filterName;
+        router.get(
+            '/products',
+            {
+                filter: isAlreadySelected ? undefined : filterName,
+                search: search || undefined,
+                in_stock: inStock ? '1' : undefined,
+                sort: selectedSort !== 'newest' ? selectedSort : undefined,
+            },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         router.get(
             '/products',
             {
                 category: safeFilters.category,
                 filter: typeof safeFilters.filter === 'string' ? safeFilters.filter : undefined,
-                search: search || undefined,
-                min_price: minPrice || undefined,
-                max_price: maxPrice || undefined,
+                search: search.trim() || undefined,
                 in_stock: inStock ? '1' : undefined,
                 sort: selectedSort !== 'newest' ? selectedSort : undefined,
             },
-            { preserveState: true }
+            { preserveState: true, preserveScroll: true }
         );
     };
 
@@ -68,34 +92,49 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                 ...safeFilters,
                 sort: newSort !== 'newest' ? newSort : undefined,
             },
-            { preserveState: true }
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const handleInStockToggle = (checked: boolean) => {
+        setInStock(checked);
+        router.get(
+            '/products',
+            {
+                ...safeFilters,
+                in_stock: checked ? '1' : undefined,
+            },
+            { preserveState: true, preserveScroll: true }
         );
     };
 
     const clearAllFilters = () => {
-        router.get('/products');
+        setSearch('');
+        setInStock(false);
+        setSelectedSort('newest');
+        router.get('/products', {}, { preserveState: true, preserveScroll: true });
     };
 
-    const activeCategory = categories.find((c) => c.slug === safeFilters.category);
+    const pageHeading = activeCategory
+        ? locale === 'si' && activeCategory.name_si
+            ? activeCategory.name_si
+            : activeCategory.name_en
+        : t('shop_all_formulations', 'Shop All Formulations');
 
     return (
         <PublicLayout>
-            <Head title={`${t('shop', 'Shop')} | ${t('app_name', 'Aura Luxe')}`} />
+            <Head title={`${pageHeading} | ${t('app_name', 'AURA LUXE — Shop')}`} />
 
-            {/* Header banner */}
-            <div className="bg-[#F5EFE6] border-b border-stone-200/80 py-10 lg:py-14">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <span className="text-xs uppercase tracking-[0.2em] font-semibold text-rose-900 block mb-1">
-                        {t('app_name', 'Aura Luxe Cosmetics')}
-                    </span>
-                    <h1 className="font-serif text-3xl sm:text-4xl text-stone-900 font-medium">
-                        {activeCategory
-                            ? locale === 'si' && activeCategory.name_si
-                                ? activeCategory.name_si
-                                : activeCategory.name_en
-                            : t('all_categories', 'All Products')}
+            {/* 1. MINIMAL LUXURY HERO BANNER */}
+            <section id="top" className="bg-[#F5EFE6] border-b border-[#EAE2D6] py-12 sm:py-16 px-4 sm:px-8">
+                <div className="max-w-7xl mx-auto">
+                    <p className="text-[11px] font-semibold tracking-[0.24em] uppercase text-[#9A4E22] mb-2 font-sans">
+                        {t('app_name', 'AURA LUXE COSMETICS')}
+                    </p>
+                    <h1 id="hero-heading" className="font-serif text-4xl sm:text-5xl font-semibold text-[#1C1917] tracking-tight">
+                        {pageHeading}
                     </h1>
-                    <p className="text-xs sm:text-sm text-stone-600 mt-2 max-w-xl">
+                    <p className="mt-3 max-w-xl text-sm text-[#1C1917]/75 leading-relaxed font-light">
                         {activeCategory
                             ? locale === 'si' && activeCategory.description_si
                                 ? activeCategory.description_si
@@ -106,264 +145,290 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                               )}
                     </p>
                 </div>
-            </div>
+            </section>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Mobile Filters Toggle Button */}
-                    <div className="lg:hidden flex items-center justify-between gap-3 bg-white p-4 rounded-xl border border-stone-200 shadow-xs">
+            {/* 2. SIMPLE FILTER TOOLBAR & PRODUCT GRID */}
+            <main id="shop" className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+                {/* 2A. Minimalist Category Navigation Pills */}
+                <div className="border-b border-[#EAE2D6] pb-5 mb-6">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                         <button
                             type="button"
-                            onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-stone-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                            onClick={() => handleCategorySelect('')}
+                            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition cursor-pointer min-h-[38px] ${
+                                !safeFilters.category && !safeFilters.filter
+                                    ? 'bg-[#1C1917] text-white shadow-xs'
+                                    : 'bg-white text-[#1C1917] border border-[#EAE2D6] hover:border-[#A67C52] hover:bg-[#FAF7F2]'
+                            }`}
                         >
-                            <span>{showMobileFilters ? '✕ Close Filters' : '⚡ Filter Products'}</span>
+                            {t('all_categories', 'All Formulations')}
                         </button>
-                        {(safeFilters.category || safeFilters.search || safeFilters.in_stock || safeFilters.min_price || safeFilters.max_price) && (
-                            <button
-                                type="button"
-                                onClick={clearAllFilters}
-                                className="text-xs text-rose-800 hover:underline font-semibold cursor-pointer"
-                            >
-                                {t('clear_filters', 'Clear All')}
-                            </button>
-                        )}
-                    </div>
 
-                    {/* Filters Sidebar */}
-                    <aside className={`w-full lg:w-64 shrink-0 space-y-6 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
-                        {/* Search Bar */}
-                        <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-900 mb-3">
-                                {t('search_placeholder', 'Search')}
-                            </h3>
-                            <form onSubmit={handleFilterSubmit} className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder={t('search_placeholder', 'Search products...')}
-                                    className="w-full text-xs rounded-lg border-stone-300 focus:border-rose-900 focus:ring-rose-900"
-                                />
+                        {/* Best Sellers Pill - Filter within Shop Page */}
+                        <button
+                            type="button"
+                            onClick={() => handleFilterSelect('bestseller')}
+                            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-medium tracking-wide transition cursor-pointer min-h-[38px] ${
+                                safeFilters.filter === 'bestseller'
+                                    ? 'bg-[#1C1917] text-[#D4A843] shadow-xs font-semibold border border-[#1C1917]'
+                                    : 'bg-white text-[#1C1917] border border-[#EAE2D6] hover:border-[#A67C52] hover:bg-[#FAF7F2]'
+                            }`}
+                        >
+                            <span className="text-[#D4A843] mr-1 font-bold">★</span>
+                            <span>{t('best_sellers', 'Best Sellers')}</span>
+                        </button>
+
+                        {/* New Arrivals Pill */}
+                        <button
+                            type="button"
+                            onClick={() => handleFilterSelect('new_arrival')}
+                            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-medium tracking-wide transition cursor-pointer min-h-[38px] ${
+                                safeFilters.filter === 'new_arrival'
+                                    ? 'bg-[#1C1917] text-emerald-300 shadow-xs font-semibold border border-[#1C1917]'
+                                    : 'bg-white text-[#1C1917] border border-[#EAE2D6] hover:border-[#A67C52] hover:bg-[#FAF7F2]'
+                            }`}
+                        >
+                            <span className="text-emerald-700 mr-1">🌿</span>
+                            <span>{t('new_arrivals', 'New Arrivals')}</span>
+                        </button>
+
+                        {categories.map((cat) => {
+                            const isSelected = safeFilters.category === cat.slug;
+                            const catName = locale === 'si' && cat.name_si ? cat.name_si : cat.name_en;
+                            return (
                                 <button
-                                    type="submit"
-                                    className="px-3 py-2 bg-stone-900 hover:bg-rose-900 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                                >
-                                    🔍
-                                </button>
-                            </form>
-                        </div>
-
-                        {/* Categories List */}
-                        <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-900">
-                                    {t('categories', 'Categories')}
-                                </h3>
-                                {safeFilters.category && (
-                                    <Link
-                                        href="/products"
-                                        className="text-[11px] text-rose-800 hover:underline"
-                                    >
-                                        {t('clear_filters', 'Clear')}
-                                    </Link>
-                                )}
-                            </div>
-                            <ul className="space-y-1.5 text-xs">
-                                <li>
-                                    <Link
-                                        href="/products"
-                                        className={`block py-1.5 px-2 rounded-md transition-colors ${
-                                            !safeFilters.category
-                                                ? 'bg-stone-900 text-white font-medium'
-                                                : 'text-stone-600 hover:bg-stone-50'
-                                        }`}
-                                    >
-                                        {t('all_categories', 'All Products')}
-                                    </Link>
-                                </li>
-                                {categories.map((cat) => (
-                                    <li key={cat.id}>
-                                        <Link
-                                            href={`/products?category=${cat.slug}`}
-                                            className={`flex items-center justify-between py-1.5 px-2 rounded-md transition-colors ${
-                                                safeFilters.category === cat.slug
-                                                    ? 'bg-stone-900 text-white font-medium'
-                                                    : 'text-stone-600 hover:bg-stone-50'
-                                            }`}
-                                        >
-                                            <span>
-                                                {locale === 'si' && cat.name_si ? cat.name_si : cat.name_en}
-                                            </span>
-                                            {cat.products_count !== undefined && (
-                                                <span className="text-[10px] opacity-70">
-                                                    ({cat.products_count})
-                                                </span>
-                                            )}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Price & Stock Filter */}
-                        <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-900">
-                                {t('filter_by_price', 'Price & Availability')}
-                            </h3>
-
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                    <label className="text-[10px] text-stone-500 block mb-1">
-                                        {t('min_price', 'Min (LKR)')}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={minPrice}
-                                        onChange={(e) => setMinPrice(e.target.value)}
-                                        placeholder="0"
-                                        className="w-full text-xs rounded-lg border-stone-300 focus:border-rose-900 focus:ring-rose-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] text-stone-500 block mb-1">
-                                        {t('max_price', 'Max (LKR)')}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={maxPrice}
-                                        onChange={(e) => setMaxPrice(e.target.value)}
-                                        placeholder="10000"
-                                        className="w-full text-xs rounded-lg border-stone-300 focus:border-rose-900 focus:ring-rose-900"
-                                    />
-                                </div>
-                            </div>
-
-                            <label className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={inStock}
-                                    onChange={(e) => setInStock(e.target.checked)}
-                                    className="rounded border-stone-300 text-rose-900 focus:ring-rose-900"
-                                />
-                                <span>{t('in_stock_only', 'In Stock Only')}</span>
-                            </label>
-
-                            <div className="flex gap-2 pt-2">
-                                <button
+                                    key={cat.id}
                                     type="button"
-                                    onClick={() => handleFilterSubmit()}
-                                    className="flex-1 py-2 bg-stone-900 hover:bg-rose-900 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                    onClick={() => handleCategorySelect(cat.slug)}
+                                    className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-medium tracking-wide transition cursor-pointer min-h-[38px] ${
+                                        isSelected
+                                            ? 'bg-[#1C1917] text-white shadow-xs font-semibold'
+                                            : 'bg-white text-[#1C1917] border border-[#EAE2D6] hover:border-[#A67C52] hover:bg-[#FAF7F2]'
+                                    }`}
                                 >
-                                    {t('filter', 'Apply')}
+                                    <span>{catName}</span>
+                                    {cat.products_count !== undefined && (
+                                        <span className={`ml-1 text-[11px] ${isSelected ? 'text-amber-200' : 'text-stone-400'}`}>
+                                            ({cat.products_count})
+                                        </span>
+                                    )}
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={clearAllFilters}
-                                    className="px-3 py-2 border border-stone-300 hover:bg-stone-50 text-stone-600 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                                >
-                                    {t('clear_filters', 'Reset')}
-                                </button>
-                            </div>
-                        </div>
-                    </aside>
-
-                    {/* Main Products Grid */}
-                    <div className="flex-1">
-                        {/* Top Sort & Count Bar */}
-                        <div className="bg-white p-4 rounded-xl border border-stone-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-                            <span className="text-xs text-stone-500">
-                                {t('showing_products', 'Showing')}{' '}
-                                <strong className="text-stone-900 font-medium">
-                                    {products.total}
-                                </strong>{' '}
-                                {t('shop', 'products')}
-                            </span>
-
-                            {/* Sort Dropdown */}
-                            <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
-                                <label className="text-stone-500 shrink-0">
-                                    {t('sort_by', 'Sort by')}:
-                                </label>
-                                <select
-                                    value={selectedSort}
-                                    onChange={(e) => handleSortChange(e.target.value)}
-                                    aria-label={t('sort_by', 'Sort products')}
-                                    className="text-xs rounded-lg border-stone-300 focus:border-rose-900 focus:ring-rose-900 py-1.5 pl-3 pr-8 w-full sm:w-auto"
-                                >
-                                    <option value="newest">{t('newest', 'Newest Arrivals')}</option>
-                                    <option value="price_low_high">
-                                        {t('price_low_high', 'Price: Low to High')}
-                                    </option>
-                                    <option value="price_high_low">
-                                        {t('price_high_low', 'Price: High to Low')}
-                                    </option>
-                                    <option value="name_asc">{t('name_asc', 'Name: A to Z')}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Products Grid */}
-                        {products.data.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {products.data.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-xl border border-stone-200 p-12 text-center my-6">
-                                <svg
-                                    className="w-12 h-12 text-stone-300 mx-auto mb-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="1.5"
-                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                                    />
-                                </svg>
-                                <h3 className="font-serif text-lg text-stone-800 font-medium mb-1">
-                                    {t('no_products_found', 'No products found')}
-                                </h3>
-                                <p className="text-xs text-stone-500 mb-4">
-                                    Try clearing some of your search filters or browse other categories.
-                                </p>
-                                <button
-                                    onClick={clearAllFilters}
-                                    className="px-4 py-2 bg-stone-900 text-white text-xs font-semibold uppercase tracking-wider rounded-lg hover:bg-rose-900 transition-colors cursor-pointer"
-                                >
-                                    {t('clear_filters', 'Clear All Filters')}
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Pagination Links */}
-                        {products.last_page > 1 && (
-                            <div className="mt-10 flex items-center justify-center gap-1.5">
-                                {products.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url ?? '#'}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                                            link.active
-                                                ? 'bg-stone-900 text-white shadow-xs'
-                                                : link.url
-                                                ? 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
-                                                : 'text-stone-400 cursor-not-allowed'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                            );
+                        })}
                     </div>
                 </div>
-            </div>
+
+                {/* 2B. Dedicated Clean Toolbar Row (Search, Sort, In-Stock, Count) */}
+                <div className="bg-[#FAF7F2] rounded-2xl border border-[#EAE2D6] p-3.5 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    {/* Left: Product Count & Active Filter Reset */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-xs font-medium text-stone-600">
+                            Showing <strong className="text-[#1C1917] font-semibold">{products.total}</strong> {products.total === 1 ? 'formulation' : 'formulations'}
+                        </span>
+
+                        {activeCategory && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1C1917] text-[#FAF7F2]">
+                                <span>{locale === 'si' && activeCategory.name_si ? activeCategory.name_si : activeCategory.name_en}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleCategorySelect('')}
+                                    className="text-[#D4A843] hover:text-white cursor-pointer ml-0.5 text-xs"
+                                    title="Clear category"
+                                >
+                                    ✕
+                                </button>
+                            </span>
+                        )}
+
+                        {safeFilters.filter === 'bestseller' && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#1C1917] text-[#D4A843]">
+                                <span>★ Best Sellers</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleFilterSelect('bestseller')}
+                                    className="text-stone-300 hover:text-white cursor-pointer ml-0.5 text-xs"
+                                    title="Clear filter"
+                                >
+                                    ✕
+                                </button>
+                            </span>
+                        )}
+
+                        {safeFilters.filter === 'new_arrival' && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-900 text-emerald-200">
+                                <span>🌿 New Arrivals</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleFilterSelect('new_arrival')}
+                                    className="text-stone-300 hover:text-white cursor-pointer ml-0.5 text-xs"
+                                    title="Clear filter"
+                                >
+                                    ✕
+                                </button>
+                            </span>
+                        )}
+
+                        {(safeFilters.category || safeFilters.filter || safeFilters.search || safeFilters.in_stock) && (
+                            <>
+                                <span className="text-stone-300 hidden sm:inline">•</span>
+                                <button
+                                    type="button"
+                                    onClick={clearAllFilters}
+                                    className="text-xs text-[#8B3A2B] hover:text-[#52121C] font-semibold underline underline-offset-4 cursor-pointer"
+                                >
+                                    {t('clear_all', 'Reset Filters')}
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Right: Clean Controls in One Neat Row */}
+                    <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-start md:justify-end">
+                        {/* Category Type Filter Dropdown */}
+                        <div className="relative shrink-0">
+                            <select
+                                value={safeFilters.category || (safeFilters.filter ? `filter:${safeFilters.filter}` : '')}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val.startsWith('filter:')) {
+                                        handleFilterSelect(val.replace('filter:', ''));
+                                    } else {
+                                        handleCategorySelect(val);
+                                    }
+                                }}
+                                aria-label={t('category', 'Category Filter')}
+                                className="bg-white border border-[#EAE2D6] rounded-full py-2 pl-3.5 pr-8 text-xs font-medium text-[#1C1917] focus:outline-none focus:border-[#8B3A2B] focus:ring-0 cursor-pointer appearance-none"
+                            >
+                                <option value="">{t('all_categories', 'Category: All')}</option>
+                                <option value="filter:bestseller">★ {t('best_sellers', 'Best Sellers')}</option>
+                                <option value="filter:new_arrival">🌿 {t('new_arrivals', 'New Arrivals')}</option>
+                                {categories.map((cat) => {
+                                    const catName = locale === 'si' && cat.name_si ? cat.name_si : cat.name_en;
+                                    return (
+                                        <option key={cat.id} value={cat.slug}>
+                                            {catName} {cat.products_count !== undefined ? `(${cat.products_count})` : ''}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            <svg className="w-3 h-3 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+
+                        {/* Inline Search */}
+                        <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:w-52">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder={t('search_placeholder', 'Search products...')}
+                                className="w-full bg-white border border-[#EAE2D6] rounded-full py-2 pl-3.5 pr-8 text-xs text-[#1C1917] focus:outline-none focus:border-[#8B3A2B] focus:ring-0"
+                            />
+                            {search ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch('');
+                                        router.get(
+                                            '/products',
+                                            { ...safeFilters, search: undefined },
+                                            { preserveState: true, preserveScroll: true }
+                                        );
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 text-xs cursor-pointer"
+                                >
+                                    ✕
+                                </button>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    aria-label="Search"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A67C52] hover:text-[#8B3A2B] cursor-pointer"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                                    </svg>
+                                </button>
+                            )}
+                        </form>
+
+                        {/* Sort By Dropdown */}
+                        <div className="relative shrink-0">
+                            <select
+                                value={selectedSort}
+                                onChange={(e) => handleSortChange(e.target.value)}
+                                aria-label={t('sort_by', 'Sort By')}
+                                className="bg-white border border-[#EAE2D6] rounded-full py-2 pl-3.5 pr-8 text-xs font-medium text-[#1C1917] focus:outline-none focus:border-[#8B3A2B] focus:ring-0 cursor-pointer appearance-none"
+                            >
+                                <option value="newest">{t('newest', 'Sort: Newest')}</option>
+                                <option value="price_low_high">{t('price_low_high', 'Price: Low to High')}</option>
+                                <option value="price_high_low">{t('price_high_low', 'Price: High to Low')}</option>
+                                <option value="name_asc">{t('name_asc', 'Name: A to Z')}</option>
+                            </select>
+                            <svg className="w-3 h-3 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+
+                        {/* In Stock Only Checkbox */}
+                        <label className="inline-flex items-center gap-2 bg-white border border-[#EAE2D6] rounded-full py-2 px-3.5 text-xs font-medium text-[#1C1917] cursor-pointer select-none hover:border-[#A67C52] transition shrink-0 min-h-[38px]">
+                            <input
+                                type="checkbox"
+                                checked={inStock}
+                                onChange={(e) => handleInStockToggle(e.target.checked)}
+                                className="accent-[#1C1917] rounded text-[#1C1917] focus:ring-0 cursor-pointer"
+                            />
+                            <span>{t('in_stock_only', 'In Stock Only')}</span>
+                        </label>
+                    </div>
+                </div>
+
+                {/* 3. Luxury 4-Column Responsive Product Grid (4 cards per row) */}
+                {products.data.length > 0 ? (
+                    <div id="product-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {products.data.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    /* 4. Empty State */
+                    <div id="empty-state" className="text-center py-16">
+                        <p className="font-serif text-2xl text-[#1C1917]">
+                            {t('no_products_found', 'No botanical formulations match your filter.')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={clearAllFilters}
+                            className="mt-4 px-5 py-2.5 rounded-full bg-[#1C1917] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#8B3A2B] transition cursor-pointer"
+                        >
+                            {t('clear_filters', 'Reset Filters')}
+                        </button>
+                    </div>
+                )}
+
+                {/* 5. Pagination Links */}
+                {products.last_page > 1 && (
+                    <div className="mt-12 flex items-center justify-center gap-2">
+                        {products.links.map((link, i) => (
+                            <Link
+                                key={i}
+                                href={link.url ?? '#'}
+                                preserveScroll
+                                preserveState
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                className={`px-4 py-2 rounded-full text-xs font-medium transition cursor-pointer ${
+                                    link.active
+                                        ? 'bg-[#1C1917] text-white shadow-xs'
+                                        : link.url
+                                        ? 'bg-white border border-[#EAE2D6] text-[#1C1917] hover:border-[#A67C52]'
+                                        : 'text-stone-400 cursor-not-allowed border border-transparent'
+                                }`}
+                            />
+                        ))}
+                    </div>
+                )}
+            </main>
         </PublicLayout>
     );
 }
-
- 

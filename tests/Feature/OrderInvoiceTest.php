@@ -465,4 +465,60 @@ class OrderInvoiceTest extends TestCase
         $this->assertEquals($itemCountBefore, OrderItem::count());
         $this->assertEquals($orderBefore, $this->order->fresh()->toArray());
     }
+
+    public function test_customer_can_download_receipt_using_valid_tracking_token(): void
+    {
+        $response = $this->get(route('order.receipt', [
+            'orderNumber' => $this->order->order_number,
+            'token' => $this->order->tracking_token,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('attachment', $response->headers->get('content-disposition'));
+        $this->assertStringContainsString("Aura-Luxe-Invoice-{$this->order->order_number}.pdf", $response->headers->get('content-disposition'));
+    }
+
+    public function test_customer_can_show_receipt_using_valid_tracking_token(): void
+    {
+        $response = $this->get(route('order.receipt.show', [
+            'orderNumber' => $this->order->order_number,
+            'token' => $this->order->tracking_token,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline', $response->headers->get('content-disposition'));
+    }
+
+    public function test_customer_can_print_receipt_using_valid_tracking_token(): void
+    {
+        $response = $this->get(route('order.receipt.print', [
+            'orderNumber' => $this->order->order_number,
+            'token' => $this->order->tracking_token,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline', $response->headers->get('content-disposition'));
+    }
+
+    public function test_receipt_download_rejects_request_without_valid_tracking_token(): void
+    {
+        $response = $this->get(route('order.receipt', [
+            'orderNumber' => $this->order->order_number,
+            'token' => 'invalid-token-xyz',
+        ]));
+
+        $response->assertStatus(404);
+    }
+
+    public function test_receipt_download_requires_token_for_unauthenticated_guests(): void
+    {
+        $response = $this->get(route('order.receipt', [
+            'orderNumber' => $this->order->order_number,
+        ]));
+
+        $response->assertStatus(403);
+    }
 }

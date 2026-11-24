@@ -39,7 +39,7 @@ class TrackingController extends Controller
         return Inertia::render('Tracking/Index', [
             'searched' => false,
             'order' => null,
-            'searchedOrderNumber' => $orderNumber,
+            'searchedOrderNumber' => '',
             'searchedPhone' => '',
         ]);
     }

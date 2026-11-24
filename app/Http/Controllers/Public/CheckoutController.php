@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\CustomerAddressService;
+use App\Services\OrderInvoiceService;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,6 +131,69 @@ class CheckoutController extends Controller
         return Inertia::render('Checkout/Confirmation', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Download the official receipt / invoice PDF for the confirmed order.
+     */
+    public function downloadReceipt(
+        string $orderNumber,
+        Request $request,
+        OrderInvoiceService $invoiceService
+    ): \Symfony\Component\HttpFoundation\Response {
+        $token = $request->query('token');
+
+        $query = Order::with(['items', 'delivery', 'codCollection'])
+            ->where('order_number', $orderNumber);
+
+        if ($token) {
+            $query->where('tracking_token', $token);
+        } elseif (auth()->check()) {
+            $query->where('customer_id', auth()->id());
+        } else {
+            abort(403, 'Unauthorized access: tracking token required.');
+        }
+
+        $order = $query->firstOrFail();
+
+        return $invoiceService->download($order);
+    }
+
+    /**
+     * Show / stream the official receipt PDF inline in browser tab.
+     */
+    public function showReceipt(
+        string $orderNumber,
+        Request $request,
+        OrderInvoiceService $invoiceService
+    ): \Symfony\Component\HttpFoundation\Response {
+        return $this->printReceipt($orderNumber, $request, $invoiceService);
+    }
+
+    /**
+     * Stream the invoice PDF inline for direct browser viewing or printing.
+     */
+    public function printReceipt(
+        string $orderNumber,
+        Request $request,
+        OrderInvoiceService $invoiceService
+    ): \Symfony\Component\HttpFoundation\Response {
+        $token = $request->query('token');
+
+        $query = Order::with(['items', 'delivery', 'codCollection'])
+            ->where('order_number', $orderNumber);
+
+        if ($token) {
+            $query->where('tracking_token', $token);
+        } elseif (auth()->check()) {
+            $query->where('customer_id', auth()->id());
+        } else {
+            abort(403, 'Unauthorized access: tracking token required.');
+        }
+
+        $order = $query->firstOrFail();
+
+        return $invoiceService->stream($order);
     }
 
     /**

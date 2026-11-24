@@ -168,11 +168,10 @@ export default function AddressBookIndex({
                                     type="button"
                                     onClick={openCreateModal}
                                     disabled={isAtLimit}
-                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer ${
-                                        isAtLimit
-                                            ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                                            : 'bg-stone-900 hover:bg-stone-800 text-white'
-                                    }`}
+                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer ${isAtLimit
+                                        ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                                        : 'bg-stone-900 hover:bg-stone-800 text-white'
+                                        }`}
                                     title={isAtLimit ? 'Maximum limit of 10 addresses reached' : 'Add a new delivery address'}
                                 >
                                     <Icons.Plus className="w-4 h-4 text-amber-300" />
@@ -263,11 +262,10 @@ export default function AddressBookIndex({
                             {addresses.map((address) => (
                                 <div
                                     key={address.id}
-                                    className={`bg-white rounded-2xl border transition-all flex flex-col justify-between p-6 shadow-xs relative ${
-                                        address.is_default
-                                            ? 'border-amber-400/80 ring-1 ring-amber-300/50'
-                                            : 'border-stone-200/80 hover:border-stone-300'
-                                    }`}
+                                    className={`bg-white rounded-2xl border transition-all flex flex-col justify-between p-6 shadow-xs relative ${address.is_default
+                                        ? 'border-amber-400/80 ring-1 ring-amber-300/50'
+                                        : 'border-stone-200/80 hover:border-stone-300'
+                                        }`}
                                 >
                                     <div>
                                         {/* Card Top: Label & Badges */}

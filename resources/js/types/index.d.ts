@@ -198,6 +198,59 @@ export interface Category {
     products_count?: number;
 }
 
+export interface Banner {
+    id: number;
+    title_en: string;
+    title_si?: string | null;
+    subtitle_en?: string | null;
+    subtitle_si?: string | null;
+    cta_text_en?: string | null;
+    cta_text_si?: string | null;
+    cta_url?: string | null;
+    image_path?: string | null;
+    image_url?: string | null;
+    placement: 'hero_slider' | 'sub_banner_1' | 'sub_banner_2' | 'trust_badge';
+    theme_style: string;
+    starts_at?: string | null;
+    ends_at?: string | null;
+    is_active: boolean;
+    sort_order: number;
+    schedule_status?: 'active' | 'scheduled' | 'expired' | 'draft';
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface ExperienceVideo {
+    video_url: string;
+    video_type?: 'youtube' | 'vimeo' | 'mp4';
+    eyebrow_en: string;
+    eyebrow_si?: string | null;
+    title_en: string;
+    title_si?: string | null;
+    description_en?: string | null;
+    description_si?: string | null;
+    cta_text_en?: string | null;
+    cta_text_si?: string | null;
+    cta_url?: string | null;
+    poster_image?: string | null;
+    autoplay?: boolean;
+}
+
+export interface ExperienceReviewItem {
+    name: string;
+    location: string;
+    rating: number;
+    comment: string;
+}
+
+export interface ExperienceReviews {
+    eyebrow_en: string;
+    eyebrow_si?: string | null;
+    title_en: string;
+    title_si?: string | null;
+    items: ExperienceReviewItem[];
+}
+
 export interface ProductImage {
     id: number;
     product_id: number;
@@ -235,6 +288,19 @@ export interface Product {
     category?: Category | null;
     images?: ProductImage[];
     primary_image?: ProductImage | null;
+    rating_cache?: string | number | null;
+    reviews_count?: number;
+    approved_reviews?: Array<{
+        id: number;
+        rating: number;
+        title: string;
+        comment: string;
+        created_at: string;
+        customer?: {
+            id: number;
+            name: string;
+        } | null;
+    }>;
 }
 
 export interface OrderItem {
@@ -439,6 +505,42 @@ export interface AgentInvitation {
     } | null;
 }
 
+export interface CartItemDetail {
+    product_id: number;
+    name_en: string;
+    name_si?: string | null;
+    slug: string;
+    sku?: string | null;
+    unit_price: number;
+    compare_at_price?: number | null;
+    quantity: number;
+    available_stock: number;
+    is_over_stock: boolean;
+    subtotal: number;
+    image?: string | null;
+    category_name_en?: string | null;
+    category_name_si?: string | null;
+}
+
+export interface CartDetails {
+    items: CartItemDetail[];
+    item_count: number;
+    subtotal: number;
+    delivery_charge: number;
+    total: number;
+    has_out_of_stock: boolean;
+}
+
+export interface UpsellProduct {
+    id: number;
+    name: string;
+    slug: string;
+    price: number;
+    image?: string | null;
+    category: string;
+    badge: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -460,4 +562,17 @@ export type PageProps<
         candidate_name?: string | null;
     };
     cartCount: number;
+    cartDetails?: CartDetails;
+    upsellProducts?: UpsellProduct[];
+    whatsapp?: {
+        number: string;
+        message: string;
+        is_enabled: boolean;
+    };
 };
+
+export interface WhatsAppSettings {
+    number: string;
+    message: string;
+    is_enabled: boolean;
+}

@@ -33,6 +33,7 @@ interface Order {
     total_amount: number | string;
     payment_method: string;
     status: string;
+    tracking_token?: string | null;
     placed_at: string;
     items: OrderItem[];
     delivery?: Delivery | null;
@@ -53,14 +54,9 @@ export default function TrackingIndex({
 }: Props) {
     const { t } = useTranslation();
 
-    // Check URL parameters for prefill
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const initialOrderNumber = searchedOrderNumber || searchParams?.get('order_number') || '';
-    const initialPhone = searchedPhone || searchParams?.get('phone') || '';
-
     const { data, setData, post, processing, errors } = useForm({
-        order_number: initialOrderNumber,
-        phone: initialPhone,
+        order_number: searched ? (searchedOrderNumber || '') : '',
+        phone: searched ? (searchedPhone || '') : '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
@@ -106,7 +102,7 @@ export default function TrackingIndex({
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
                 {/* Search Form Card */}
                 <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 shadow-xs max-w-xl mx-auto">
-                    <form onSubmit={handleSearch} className="space-y-4">
+                    <form onSubmit={handleSearch} className="space-y-4" autoComplete="off">
                         <div>
                             <label className="text-xs font-semibold text-stone-800 block mb-1">
                                 {t('order_number', 'Order Number')} <span className="text-rose-600">*</span>
@@ -114,6 +110,7 @@ export default function TrackingIndex({
                             <input
                                 type="text"
                                 required
+                                autoComplete="off"
                                 value={data.order_number}
                                 onChange={(e) => setData('order_number', e.target.value)}
                                 placeholder="e.g. ORD-20261102-ABCDE"
@@ -131,6 +128,7 @@ export default function TrackingIndex({
                             <input
                                 type="tel"
                                 required
+                                autoComplete="off"
                                 value={data.phone}
                                 onChange={(e) => setData('phone', e.target.value)}
                                 placeholder="0771234567"
@@ -267,6 +265,25 @@ export default function TrackingIndex({
                                         Total: LKR {Number(order.total_amount).toFixed(2)}
                                     </span>
                                 </div>
+
+                                {/* Download Receipt Option */}
+                                {order.tracking_token && (
+                                    <div className="pt-4 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <span className="text-xs text-stone-500">
+                                            Need a copy of your official order receipt?
+                                        </span>
+                                        <a
+                                            href={`/orders/${order.order_number}/receipt?token=${order.tracking_token}`}
+                                            download
+                                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-stone-900 hover:bg-rose-900 text-white text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            <span>Download Receipt (PDF)</span>
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center max-w-md mx-auto shadow-xs">
